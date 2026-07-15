@@ -1,0 +1,41 @@
+---
+description: ForeShift base demand data — vocab, CSV shape, Bubble tables, query rules
+alwaysApply: true
+---
+
+# ForeShift Data Structure
+
+Read `cursor.md` for full context. Source: `FORESHIFT_DATA_STRUCTURE.md`.
+
+## Base demand rule
+
+`base_score` is the **floor only**. Final zone demand is computed at query time:
+```
+final = (base + event_lift) * weather_factor   (capped 150)
+```
+
+## Data grain
+
+- **Long CSV:** 3,276 rows = zone × concept × day × daypart
+- **Wide CSV:** 819 rows = zone × concept × day (4 dayparts as columns)
+- Bubble table: `DemandScore` (wide). API name must match exactly.
+
+## Exact vocab (case/punctuation sensitive)
+
+- **13 zones**, **9 concepts**, **7 days** (`Mon`–`Sun`), **4 dayparts** (`morning|midday|dinner|late`)
+- Canonical list: `convex/lib/vocab.ts` — Bubble option sets must match exactly
+- Mismatch silently breaks lookups (e.g. "Woodward Corridor" ≠ "Woodward Core")
+
+## Wide field names (Bubble / `WIDE_FIELDS`)
+
+`zone`, `concept`, `day`, `morning_base_score`, `morning_base_band`, `midday_base_score`, `midday_base_band`, `dinner_base_score`, `dinner_base_band`, `late_base_score`, `late_base_band`
+
+## Signal tables (weekly, per zone)
+
+- `ZoneGeo` — lat/lng per zone (cron lookup)
+- `EventSignal` — Ticketmaster events; upsert key `source_id` + `zone`
+- `WeatherSignal` — 7-day forecast; upsert key `zone` + `forecast_date`
+
+## Bands in base data
+
+Max observed base `100.4` (Peak). Exceptional only after layers. `0.0` = closed daypart by design, not missing data.

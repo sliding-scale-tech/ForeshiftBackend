@@ -1,0 +1,38 @@
+{
+  "name": "my-app",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:frontend": "next dev",
+    "dev:backend": "convex dev",
+    "build": "next build",
+    "start": "next start",
+    "logs": "convex logs",
+    "lint": "tsc -p convex && eslint . --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.5.18",
+    "@hookform/resolvers": "^5.4.0",
+    "convex": "^1.36.1",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-hook-form": "^7.81.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@convex-dev/eslint-plugin": "^2.0.0",
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "@typescript-eslint/parser": "^8.62.1",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
+    "npm-run-all2": "^8.0.4",
+    "typescript": "^6.0.3"
+  }
+}

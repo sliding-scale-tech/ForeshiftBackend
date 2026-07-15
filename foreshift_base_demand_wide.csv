@@ -1,0 +1,828 @@
+# ForeShift Detroit - BASE DEMAND LAYER (v8)
+# IMPORTANT: These are BASE scores only - BEFORE the event and weather layers.
+# Final demand shown to an operator = base_score + event lift + weather adjustment,
+# computed at query time in the application. Do NOT treat base_score as final demand.
+# Event lift (additive) and weather (multiplicative) are applied in-app; this file is the fixed floor.
+# Grain: one row per zone x concept x day x daypart. 13 zones x 9 concepts x 7 days x 4 dayparts = 3,276 rows.
+# Bands: Exceptional 110-150, Peak 85-109, High 65-84, Moderate 40-64, Light 20-39, Minimal 0-19.
+# Closed dayparts score 0 (Minimal) by design. CONFIDENTIAL - ForeShift LLC.
+zone,concept,day,morning_base_score,morning_base_band,midday_base_score,midday_base_band,dinner_base_score,dinner_base_band,late_base_score,late_base_band
+Woodward Core,Fine Dining,Mon,0.0,Minimal,2.7,Minimal,8.8,Minimal,0.6,Minimal
+Woodward Core,Fine Dining,Tue,0.0,Minimal,6.3,Minimal,18.1,Minimal,1.3,Minimal
+Woodward Core,Fine Dining,Wed,0.0,Minimal,12.3,Minimal,35.2,Light,2.5,Minimal
+Woodward Core,Fine Dining,Thu,0.0,Minimal,22.5,Light,68.9,High,7.4,Minimal
+Woodward Core,Fine Dining,Fri,0.0,Minimal,23.7,Light,92.6,Peak,17.4,Minimal
+Woodward Core,Fine Dining,Sat,0.0,Minimal,25.7,Light,100.4,Peak,18.9,Minimal
+Woodward Core,Fine Dining,Sun,0.0,Minimal,3.6,Minimal,11.9,Minimal,0.6,Minimal
+Woodward Core,Upscale Casual,Mon,0.9,Minimal,8.8,Minimal,13.8,Minimal,1.1,Minimal
+Woodward Core,Upscale Casual,Tue,1.4,Minimal,14.0,Minimal,22.1,Light,1.7,Minimal
+Woodward Core,Upscale Casual,Wed,2.2,Minimal,20.3,Light,34.2,Light,3.4,Minimal
+Woodward Core,Upscale Casual,Thu,3.4,Minimal,28.9,Light,51.1,Moderate,6.8,Minimal
+Woodward Core,Upscale Casual,Fri,4.5,Minimal,30.5,Light,68.6,High,13.7,Minimal
+Woodward Core,Upscale Casual,Sat,7.6,Minimal,43.9,Moderate,63.2,Moderate,11.3,Minimal
+Woodward Core,Upscale Casual,Sun,2.8,Minimal,18.5,Minimal,24.8,Light,1.5,Minimal
+Woodward Core,Casual Dining,Mon,2.6,Minimal,19.3,Minimal,21.5,Light,2.0,Minimal
+Woodward Core,Casual Dining,Tue,3.1,Minimal,22.7,Light,25.2,Light,2.3,Minimal
+Woodward Core,Casual Dining,Wed,3.8,Minimal,26.5,Light,31.8,Light,3.2,Minimal
+Woodward Core,Casual Dining,Thu,4.9,Minimal,32.3,Light,41.1,Moderate,5.2,Minimal
+Woodward Core,Casual Dining,Fri,6.4,Minimal,36.8,Light,53.0,Moderate,9.4,Minimal
+Woodward Core,Casual Dining,Sat,6.3,Minimal,42.4,Moderate,49.0,Moderate,8.0,Minimal
+Woodward Core,Casual Dining,Sun,3.8,Minimal,29.5,Light,31.2,Light,2.0,Minimal
+Woodward Core,Fast Casual,Mon,8.4,Minimal,53.3,Moderate,17.8,Minimal,0.0,Minimal
+Woodward Core,Fast Casual,Tue,9.6,Minimal,61.2,Moderate,20.4,Light,0.0,Minimal
+Woodward Core,Fast Casual,Wed,10.5,Minimal,66.7,High,22.3,Light,0.0,Minimal
+Woodward Core,Fast Casual,Thu,10.7,Minimal,63.4,Moderate,26.6,Light,0.0,Minimal
+Woodward Core,Fast Casual,Fri,10.7,Minimal,63.6,Moderate,26.6,Light,0.0,Minimal
+Woodward Core,Fast Casual,Sat,5.7,Minimal,40.4,Moderate,21.8,Light,0.0,Minimal
+Woodward Core,Fast Casual,Sun,3.4,Minimal,23.7,Light,12.8,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Mon,34.9,Light,30.4,Light,4.8,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Tue,38.8,Light,33.8,Light,5.4,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Wed,42.2,Moderate,36.8,Light,5.8,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Thu,41.0,Moderate,37.0,Light,7.8,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Fri,38.6,Light,36.7,Light,10.7,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Sat,23.7,Light,30.4,Light,8.2,Minimal,0.0,Minimal
+Woodward Core,Coffee Shop,Sun,13.4,Minimal,19.7,Minimal,4.9,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Mon,15.6,Minimal,18.8,Minimal,0.8,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Tue,16.2,Minimal,19.5,Minimal,0.8,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Wed,18.2,Minimal,21.9,Light,0.9,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Thu,21.8,Light,28.4,Light,2.3,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Fri,27.2,Light,40.0,Moderate,4.7,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Sat,36.6,Light,86.0,Peak,5.3,Minimal,0.0,Minimal
+Woodward Core,Breakfast / Brunch Cafe,Sun,30.3,Light,82.5,High,3.6,Minimal,0.0,Minimal
+Woodward Core,Sports Bar,Mon,0.0,Minimal,13.5,Minimal,25.2,Light,6.8,Minimal
+Woodward Core,Sports Bar,Tue,0.0,Minimal,13.6,Minimal,24.5,Light,6.3,Minimal
+Woodward Core,Sports Bar,Wed,0.0,Minimal,15.6,Minimal,28.0,Light,7.2,Minimal
+Woodward Core,Sports Bar,Thu,0.0,Minimal,17.6,Minimal,37.4,Light,11.4,Minimal
+Woodward Core,Sports Bar,Fri,0.0,Minimal,24.5,Light,40.8,Moderate,29.0,Light
+Woodward Core,Sports Bar,Sat,0.0,Minimal,33.0,Light,42.8,Moderate,28.3,Light
+Woodward Core,Sports Bar,Sun,0.0,Minimal,23.4,Light,37.6,Light,10.1,Minimal
+Woodward Core,Cocktail Lounge,Mon,0.0,Minimal,0.5,Minimal,3.7,Minimal,2.5,Minimal
+Woodward Core,Cocktail Lounge,Tue,0.0,Minimal,0.8,Minimal,6.8,Minimal,4.6,Minimal
+Woodward Core,Cocktail Lounge,Wed,0.0,Minimal,2.0,Minimal,16.1,Minimal,10.9,Minimal
+Woodward Core,Cocktail Lounge,Thu,0.0,Minimal,5.6,Minimal,42.2,Moderate,32.5,Light
+Woodward Core,Cocktail Lounge,Fri,0.0,Minimal,5.4,Minimal,61.9,Moderate,58.8,Moderate
+Woodward Core,Cocktail Lounge,Sat,0.0,Minimal,5.4,Minimal,61.4,Moderate,58.2,Moderate
+Woodward Core,Cocktail Lounge,Sun,0.0,Minimal,1.4,Minimal,11.2,Minimal,7.6,Minimal
+Greektown / Casino District,Fine Dining,Mon,0.0,Minimal,1.7,Minimal,8.1,Minimal,0.9,Minimal
+Greektown / Casino District,Fine Dining,Tue,0.0,Minimal,3.8,Minimal,16.6,Minimal,2.0,Minimal
+Greektown / Casino District,Fine Dining,Wed,0.0,Minimal,7.6,Minimal,32.8,Light,4.0,Minimal
+Greektown / Casino District,Fine Dining,Thu,0.0,Minimal,14.1,Minimal,65.2,High,12.1,Minimal
+Greektown / Casino District,Fine Dining,Fri,0.0,Minimal,15.0,Minimal,88.5,Peak,28.7,Light
+Greektown / Casino District,Fine Dining,Sat,0.0,Minimal,16.8,Minimal,98.7,Peak,32.0,Light
+Greektown / Casino District,Fine Dining,Sun,0.0,Minimal,2.4,Minimal,11.9,Minimal,1.0,Minimal
+Greektown / Casino District,Upscale Casual,Mon,0.5,Minimal,5.2,Minimal,12.3,Minimal,1.6,Minimal
+Greektown / Casino District,Upscale Casual,Tue,0.7,Minimal,8.2,Minimal,19.6,Minimal,2.6,Minimal
+Greektown / Casino District,Upscale Casual,Wed,1.2,Minimal,12.3,Minimal,31.2,Light,5.3,Minimal
+Greektown / Casino District,Upscale Casual,Thu,1.8,Minimal,17.9,Minimal,47.8,Moderate,11.0,Minimal
+Greektown / Casino District,Upscale Casual,Fri,2.5,Minimal,19.4,Minimal,65.8,High,22.7,Light
+Greektown / Casino District,Upscale Casual,Sat,4.5,Minimal,29.7,Light,64.6,Moderate,19.8,Minimal
+Greektown / Casino District,Upscale Casual,Sun,1.6,Minimal,12.5,Minimal,25.2,Light,2.5,Minimal
+Greektown / Casino District,Casual Dining,Mon,1.4,Minimal,11.4,Minimal,19.1,Minimal,3.0,Minimal
+Greektown / Casino District,Casual Dining,Tue,1.6,Minimal,13.1,Minimal,21.9,Light,3.4,Minimal
+Greektown / Casino District,Casual Dining,Wed,2.0,Minimal,15.8,Minimal,28.5,Light,5.0,Minimal
+Greektown / Casino District,Casual Dining,Thu,2.7,Minimal,19.9,Minimal,38.1,Light,8.4,Minimal
+Greektown / Casino District,Casual Dining,Fri,3.6,Minimal,23.5,Light,51.0,Moderate,15.7,Minimal
+Greektown / Casino District,Casual Dining,Sat,3.9,Minimal,29.7,Light,51.9,Moderate,14.6,Minimal
+Greektown / Casino District,Casual Dining,Sun,2.3,Minimal,20.2,Light,32.2,Light,3.6,Minimal
+Greektown / Casino District,Fast Casual,Mon,4.3,Minimal,30.8,Light,15.5,Minimal,0.0,Minimal
+Greektown / Casino District,Fast Casual,Tue,4.8,Minimal,34.5,Light,17.4,Minimal,0.0,Minimal
+Greektown / Casino District,Fast Casual,Wed,5.4,Minimal,39.1,Light,19.7,Minimal,0.0,Minimal
+Greektown / Casino District,Fast Casual,Thu,5.7,Minimal,38.7,Light,24.5,Light,0.0,Minimal
+Greektown / Casino District,Fast Casual,Fri,6.0,Minimal,40.7,Moderate,25.7,Light,0.0,Minimal
+Greektown / Casino District,Fast Casual,Sat,3.7,Minimal,29.9,Light,24.3,Light,0.0,Minimal
+Greektown / Casino District,Fast Casual,Sun,2.1,Minimal,17.0,Minimal,13.9,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Mon,17.9,Minimal,17.7,Minimal,4.3,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Tue,19.4,Minimal,19.2,Minimal,4.6,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Wed,21.8,Light,21.7,Light,5.2,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Thu,22.1,Light,22.7,Light,7.2,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Fri,21.7,Light,23.5,Light,10.3,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Sat,15.3,Minimal,22.3,Light,9.1,Minimal,0.0,Minimal
+Greektown / Casino District,Coffee Shop,Sun,8.4,Minimal,14.0,Minimal,5.3,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Mon,8.4,Minimal,11.4,Minimal,0.7,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Tue,8.6,Minimal,11.7,Minimal,0.7,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Wed,9.7,Minimal,13.3,Minimal,0.8,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Thu,11.9,Minimal,17.7,Minimal,2.2,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Fri,15.2,Minimal,25.4,Light,4.5,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Sat,21.4,Light,57.3,Moderate,5.4,Minimal,0.0,Minimal
+Greektown / Casino District,Breakfast / Brunch Cafe,Sun,17.4,Minimal,53.9,Moderate,3.5,Minimal,0.0,Minimal
+Greektown / Casino District,Sports Bar,Mon,0.0,Minimal,8.3,Minimal,23.3,Light,10.8,Minimal
+Greektown / Casino District,Sports Bar,Tue,0.0,Minimal,8.2,Minimal,22.4,Light,10.0,Minimal
+Greektown / Casino District,Sports Bar,Wed,0.0,Minimal,9.5,Minimal,25.9,Light,11.5,Minimal
+Greektown / Casino District,Sports Bar,Thu,0.0,Minimal,11.0,Minimal,35.3,Light,18.6,Minimal
+Greektown / Casino District,Sports Bar,Fri,0.0,Minimal,15.5,Minimal,39.0,Light,47.7,Moderate
+Greektown / Casino District,Sports Bar,Sat,0.0,Minimal,21.9,Light,42.7,Moderate,48.7,Moderate
+Greektown / Casino District,Sports Bar,Sun,0.0,Minimal,15.3,Minimal,37.1,Light,17.2,Minimal
+Greektown / Casino District,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,3.4,Minimal,3.9,Minimal
+Greektown / Casino District,Cocktail Lounge,Tue,0.0,Minimal,0.5,Minimal,6.2,Minimal,7.3,Minimal
+Greektown / Casino District,Cocktail Lounge,Wed,0.0,Minimal,1.2,Minimal,15.1,Minimal,17.6,Minimal
+Greektown / Casino District,Cocktail Lounge,Thu,0.0,Minimal,3.5,Minimal,39.9,Light,53.1,Moderate
+Greektown / Casino District,Cocktail Lounge,Fri,0.0,Minimal,3.2,Minimal,55.7,Moderate,91.0,Peak
+Greektown / Casino District,Cocktail Lounge,Sat,0.0,Minimal,3.2,Minimal,55.7,Moderate,91.0,Peak
+Greektown / Casino District,Cocktail Lounge,Sun,0.0,Minimal,0.9,Minimal,11.0,Minimal,12.8,Minimal
+Financial District,Fine Dining,Mon,0.0,Minimal,2.0,Minimal,3.9,Minimal,0.1,Minimal
+Financial District,Fine Dining,Tue,0.0,Minimal,4.7,Minimal,8.2,Minimal,0.1,Minimal
+Financial District,Fine Dining,Wed,0.0,Minimal,9.2,Minimal,16.1,Minimal,0.3,Minimal
+Financial District,Fine Dining,Thu,0.0,Minimal,16.4,Minimal,30.6,Light,0.8,Minimal
+Financial District,Fine Dining,Fri,0.0,Minimal,16.7,Minimal,39.9,Light,1.8,Minimal
+Financial District,Fine Dining,Sat,0.0,Minimal,18.5,Minimal,44.2,Moderate,2.0,Minimal
+Financial District,Fine Dining,Sun,0.0,Minimal,2.7,Minimal,5.5,Minimal,0.1,Minimal
+Financial District,Upscale Casual,Mon,0.7,Minimal,6.5,Minimal,6.2,Minimal,0.1,Minimal
+Financial District,Upscale Casual,Tue,1.1,Minimal,10.6,Minimal,10.2,Minimal,0.2,Minimal
+Financial District,Upscale Casual,Wed,1.7,Minimal,15.6,Minimal,16.0,Minimal,0.4,Minimal
+Financial District,Upscale Casual,Thu,2.4,Minimal,21.0,Light,22.7,Light,0.7,Minimal
+Financial District,Upscale Casual,Fri,3.0,Minimal,20.6,Light,28.4,Light,1.4,Minimal
+Financial District,Upscale Casual,Sat,5.4,Minimal,31.1,Light,27.4,Light,1.2,Minimal
+Financial District,Upscale Casual,Sun,2.1,Minimal,14.0,Minimal,11.4,Minimal,0.2,Minimal
+Financial District,Casual Dining,Mon,2.0,Minimal,14.3,Minimal,9.7,Minimal,0.2,Minimal
+Financial District,Casual Dining,Tue,2.4,Minimal,17.3,Minimal,11.8,Minimal,0.3,Minimal
+Financial District,Casual Dining,Wed,3.0,Minimal,20.6,Light,15.1,Minimal,0.4,Minimal
+Financial District,Casual Dining,Thu,3.6,Minimal,23.6,Light,18.3,Minimal,0.6,Minimal
+Financial District,Casual Dining,Fri,4.2,Minimal,24.1,Light,21.2,Light,0.9,Minimal
+Financial District,Casual Dining,Sat,4.4,Minimal,29.7,Light,21.0,Light,0.8,Minimal
+Financial District,Casual Dining,Sun,2.9,Minimal,22.6,Light,14.6,Minimal,0.2,Minimal
+Financial District,Fast Casual,Mon,6.3,Minimal,39.8,Light,8.1,Minimal,0.0,Minimal
+Financial District,Fast Casual,Tue,7.4,Minimal,47.3,Moderate,9.7,Minimal,0.0,Minimal
+Financial District,Fast Casual,Wed,8.3,Minimal,52.8,Moderate,10.8,Minimal,0.0,Minimal
+Financial District,Fast Casual,Thu,7.8,Minimal,46.1,Moderate,11.8,Minimal,0.0,Minimal
+Financial District,Fast Casual,Fri,6.7,Minimal,39.7,Light,10.2,Minimal,0.0,Minimal
+Financial District,Fast Casual,Sat,3.9,Minimal,27.8,Light,9.2,Minimal,0.0,Minimal
+Financial District,Fast Casual,Sun,2.6,Minimal,18.7,Minimal,6.2,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Mon,26.0,Light,22.6,Light,2.2,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Tue,29.8,Light,26.0,Light,2.5,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Wed,33.2,Light,28.9,Light,2.8,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Thu,29.9,Light,26.9,Light,3.5,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Fri,24.3,Light,23.1,Light,4.1,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Sat,16.4,Minimal,21.0,Light,3.5,Minimal,0.0,Minimal
+Financial District,Coffee Shop,Sun,10.5,Minimal,15.4,Minimal,2.4,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Mon,11.5,Minimal,13.8,Minimal,0.4,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Tue,12.2,Minimal,14.6,Minimal,0.4,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Wed,13.8,Minimal,16.6,Minimal,0.4,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Thu,15.9,Minimal,20.7,Light,1.0,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Fri,18.5,Minimal,27.3,Light,2.0,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Sat,26.2,Light,61.5,Moderate,2.3,Minimal,0.0,Minimal
+Financial District,Breakfast / Brunch Cafe,Sun,22.5,Light,61.2,Moderate,1.6,Minimal,0.0,Minimal
+Financial District,Sports Bar,Mon,0.0,Minimal,9.9,Minimal,11.3,Minimal,0.7,Minimal
+Financial District,Sports Bar,Tue,0.0,Minimal,10.1,Minimal,11.2,Minimal,0.7,Minimal
+Financial District,Sports Bar,Wed,0.0,Minimal,11.7,Minimal,12.9,Minimal,0.8,Minimal
+Financial District,Sports Bar,Thu,0.0,Minimal,12.8,Minimal,16.6,Minimal,1.2,Minimal
+Financial District,Sports Bar,Fri,0.0,Minimal,17.0,Minimal,17.3,Minimal,2.9,Minimal
+Financial District,Sports Bar,Sat,0.0,Minimal,23.6,Light,18.7,Minimal,2.9,Minimal
+Financial District,Sports Bar,Sun,0.0,Minimal,17.4,Minimal,17.1,Minimal,1.1,Minimal
+Financial District,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,1.7,Minimal,0.3,Minimal
+Financial District,Cocktail Lounge,Tue,0.0,Minimal,0.6,Minimal,3.1,Minimal,0.5,Minimal
+Financial District,Cocktail Lounge,Wed,0.0,Minimal,1.5,Minimal,7.3,Minimal,1.2,Minimal
+Financial District,Cocktail Lounge,Thu,0.0,Minimal,4.1,Minimal,18.7,Minimal,3.4,Minimal
+Financial District,Cocktail Lounge,Fri,0.0,Minimal,3.9,Minimal,26.9,Light,6.1,Minimal
+Financial District,Cocktail Lounge,Sat,0.0,Minimal,3.9,Minimal,27.1,Light,6.1,Minimal
+Financial District,Cocktail Lounge,Sun,0.0,Minimal,1.0,Minimal,5.1,Minimal,0.8,Minimal
+Midtown,Fine Dining,Mon,0.0,Minimal,1.9,Minimal,5.7,Minimal,0.4,Minimal
+Midtown,Fine Dining,Tue,0.0,Minimal,4.3,Minimal,11.6,Minimal,0.8,Minimal
+Midtown,Fine Dining,Wed,0.0,Minimal,8.4,Minimal,22.6,Light,1.5,Minimal
+Midtown,Fine Dining,Thu,0.0,Minimal,15.3,Minimal,44.1,Moderate,4.6,Minimal
+Midtown,Fine Dining,Fri,0.0,Minimal,15.9,Minimal,58.7,Moderate,10.6,Minimal
+Midtown,Fine Dining,Sat,0.0,Minimal,17.6,Minimal,65.0,High,11.8,Minimal
+Midtown,Fine Dining,Sun,0.0,Minimal,2.5,Minimal,7.8,Minimal,0.4,Minimal
+Midtown,Upscale Casual,Mon,0.7,Minimal,5.9,Minimal,8.8,Minimal,0.7,Minimal
+Midtown,Upscale Casual,Tue,1.0,Minimal,9.4,Minimal,14.0,Minimal,1.0,Minimal
+Midtown,Upscale Casual,Wed,1.6,Minimal,13.8,Minimal,21.9,Light,2.1,Minimal
+Midtown,Upscale Casual,Thu,2.4,Minimal,19.5,Minimal,32.5,Light,4.2,Minimal
+Midtown,Upscale Casual,Fri,3.2,Minimal,20.2,Light,42.9,Moderate,8.3,Minimal
+Midtown,Upscale Casual,Sat,5.7,Minimal,30.4,Light,41.3,Moderate,7.1,Minimal
+Midtown,Upscale Casual,Sun,2.1,Minimal,12.9,Minimal,16.3,Minimal,0.9,Minimal
+Midtown,Casual Dining,Mon,1.9,Minimal,13.1,Minimal,13.8,Minimal,1.2,Minimal
+Midtown,Casual Dining,Tue,2.2,Minimal,15.2,Minimal,16.0,Minimal,1.4,Minimal
+Midtown,Casual Dining,Wed,2.8,Minimal,18.0,Minimal,20.4,Light,2.0,Minimal
+Midtown,Casual Dining,Thu,3.6,Minimal,21.7,Light,26.1,Light,3.2,Minimal
+Midtown,Casual Dining,Fri,4.5,Minimal,24.1,Light,32.8,Light,5.6,Minimal
+Midtown,Casual Dining,Sat,4.8,Minimal,29.7,Light,32.5,Light,5.1,Minimal
+Midtown,Casual Dining,Sun,2.9,Minimal,20.7,Light,20.6,Light,1.3,Minimal
+Midtown,Fast Casual,Mon,6.1,Minimal,36.2,Light,11.4,Minimal,0.0,Minimal
+Midtown,Fast Casual,Tue,6.9,Minimal,41.0,Moderate,12.9,Minimal,0.0,Minimal
+Midtown,Fast Casual,Wed,7.7,Minimal,45.3,Moderate,14.3,Minimal,0.0,Minimal
+Midtown,Fast Casual,Thu,7.7,Minimal,42.5,Moderate,16.8,Minimal,0.0,Minimal
+Midtown,Fast Casual,Fri,7.4,Minimal,41.0,Moderate,16.2,Minimal,0.0,Minimal
+Midtown,Fast Casual,Sat,4.4,Minimal,28.8,Light,14.7,Minimal,0.0,Minimal
+Midtown,Fast Casual,Sun,2.6,Minimal,16.9,Minimal,8.6,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Mon,25.5,Light,20.7,Light,3.1,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Tue,28.0,Light,22.6,Light,3.4,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Wed,30.9,Light,25.0,Light,3.7,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Thu,29.6,Light,24.8,Light,5.0,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Fri,26.9,Light,23.8,Light,6.5,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Sat,18.2,Minimal,21.6,Light,5.5,Minimal,0.0,Minimal
+Midtown,Coffee Shop,Sun,10.3,Minimal,14.0,Minimal,3.3,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Mon,11.4,Minimal,12.8,Minimal,0.5,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Tue,11.8,Minimal,13.1,Minimal,0.5,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Wed,13.3,Minimal,14.8,Minimal,0.6,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Thu,15.9,Minimal,19.2,Minimal,1.5,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Fri,19.4,Minimal,26.6,Light,3.0,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Sat,27.2,Light,59.3,Moderate,3.5,Minimal,0.0,Minimal
+Midtown,Breakfast / Brunch Cafe,Sun,22.4,Light,56.7,Moderate,2.3,Minimal,0.0,Minimal
+Midtown,Sports Bar,Mon,0.0,Minimal,9.2,Minimal,16.2,Minimal,4.2,Minimal
+Midtown,Sports Bar,Tue,0.0,Minimal,9.2,Minimal,15.6,Minimal,3.9,Minimal
+Midtown,Sports Bar,Wed,0.0,Minimal,10.6,Minimal,18.0,Minimal,4.5,Minimal
+Midtown,Sports Bar,Thu,0.0,Minimal,11.9,Minimal,23.9,Light,7.0,Minimal
+Midtown,Sports Bar,Fri,0.0,Minimal,16.4,Minimal,25.7,Light,17.6,Minimal
+Midtown,Sports Bar,Sat,0.0,Minimal,22.7,Light,27.8,Light,17.7,Minimal
+Midtown,Sports Bar,Sun,0.0,Minimal,16.1,Minimal,24.5,Light,6.3,Minimal
+Midtown,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,2.4,Minimal,1.5,Minimal
+Midtown,Cocktail Lounge,Tue,0.0,Minimal,0.6,Minimal,4.3,Minimal,2.8,Minimal
+Midtown,Cocktail Lounge,Wed,0.0,Minimal,1.3,Minimal,10.3,Minimal,6.7,Minimal
+Midtown,Cocktail Lounge,Thu,0.0,Minimal,3.8,Minimal,27.0,Light,20.0,Light
+Midtown,Cocktail Lounge,Fri,0.0,Minimal,3.7,Minimal,39.4,Light,36.0,Light
+Midtown,Cocktail Lounge,Sat,0.0,Minimal,3.7,Minimal,39.6,Light,36.2,Light
+Midtown,Cocktail Lounge,Sun,0.0,Minimal,0.9,Minimal,7.2,Minimal,4.7,Minimal
+Corktown,Fine Dining,Mon,0.0,Minimal,1.3,Minimal,7.0,Minimal,0.6,Minimal
+Corktown,Fine Dining,Tue,0.0,Minimal,3.0,Minimal,14.6,Minimal,1.3,Minimal
+Corktown,Fine Dining,Wed,0.0,Minimal,6.0,Minimal,29.3,Light,2.7,Minimal
+Corktown,Fine Dining,Thu,0.0,Minimal,11.3,Minimal,58.9,Moderate,8.3,Minimal
+Corktown,Fine Dining,Fri,0.0,Minimal,12.0,Minimal,80.2,High,19.7,Minimal
+Corktown,Fine Dining,Sat,0.0,Minimal,13.4,Minimal,89.5,Peak,22.0,Light
+Corktown,Fine Dining,Sun,0.0,Minimal,2.0,Minimal,11.4,Minimal,0.7,Minimal
+Corktown,Upscale Casual,Mon,0.4,Minimal,3.9,Minimal,10.5,Minimal,1.0,Minimal
+Corktown,Upscale Casual,Tue,0.7,Minimal,6.3,Minimal,16.9,Minimal,1.7,Minimal
+Corktown,Upscale Casual,Wed,1.1,Minimal,9.6,Minimal,27.5,Light,3.5,Minimal
+Corktown,Upscale Casual,Thu,1.8,Minimal,14.3,Minimal,43.2,Moderate,7.5,Minimal
+Corktown,Upscale Casual,Fri,2.4,Minimal,15.6,Minimal,59.8,Moderate,15.7,Minimal
+Corktown,Upscale Casual,Sat,4.4,Minimal,23.9,Light,58.8,Moderate,13.7,Minimal
+Corktown,Upscale Casual,Sun,1.7,Minimal,10.8,Minimal,24.8,Light,1.9,Minimal
+Corktown,Casual Dining,Mon,1.2,Minimal,8.4,Minimal,16.0,Minimal,1.9,Minimal
+Corktown,Casual Dining,Tue,1.4,Minimal,9.9,Minimal,18.8,Minimal,2.2,Minimal
+Corktown,Casual Dining,Wed,1.9,Minimal,12.1,Minimal,24.8,Light,3.3,Minimal
+Corktown,Casual Dining,Thu,2.6,Minimal,15.9,Minimal,34.5,Light,5.7,Minimal
+Corktown,Casual Dining,Fri,3.5,Minimal,18.9,Minimal,46.5,Moderate,10.8,Minimal
+Corktown,Casual Dining,Sat,3.8,Minimal,24.0,Light,47.5,Moderate,10.1,Minimal
+Corktown,Casual Dining,Sun,2.5,Minimal,17.9,Minimal,32.4,Light,2.8,Minimal
+Corktown,Fast Casual,Mon,3.7,Minimal,22.3,Light,12.7,Minimal,0.0,Minimal
+Corktown,Fast Casual,Tue,4.3,Minimal,25.7,Light,14.6,Minimal,0.0,Minimal
+Corktown,Fast Casual,Wed,5.0,Minimal,29.7,Light,17.0,Minimal,0.0,Minimal
+Corktown,Fast Casual,Thu,5.5,Minimal,30.9,Light,22.1,Light,0.0,Minimal
+Corktown,Fast Casual,Fri,5.9,Minimal,32.8,Light,23.5,Light,0.0,Minimal
+Corktown,Fast Casual,Sat,3.7,Minimal,24.2,Light,22.3,Light,0.0,Minimal
+Corktown,Fast Casual,Sun,2.4,Minimal,16.0,Minimal,14.7,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Mon,15.8,Minimal,13.0,Minimal,3.5,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Tue,17.5,Minimal,14.4,Minimal,3.9,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Wed,20.2,Light,16.5,Minimal,4.5,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Thu,21.4,Light,18.1,Minimal,6.5,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Fri,21.2,Light,18.9,Minimal,9.4,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Sat,15.0,Minimal,18.1,Minimal,8.3,Minimal,0.0,Minimal
+Corktown,Coffee Shop,Sun,9.4,Minimal,13.0,Minimal,5.6,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Mon,7.7,Minimal,8.7,Minimal,0.6,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Tue,8.0,Minimal,9.0,Minimal,0.6,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Wed,9.2,Minimal,10.4,Minimal,0.7,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Thu,11.5,Minimal,14.1,Minimal,2.0,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Fri,14.7,Minimal,20.4,Light,4.1,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Sat,20.9,Light,46.0,Moderate,4.9,Minimal,0.0,Minimal
+Corktown,Breakfast / Brunch Cafe,Sun,17.6,Minimal,44.9,Moderate,3.3,Minimal,0.0,Minimal
+Corktown,Sports Bar,Mon,0.0,Minimal,6.4,Minimal,20.4,Light,7.2,Minimal
+Corktown,Sports Bar,Tue,0.0,Minimal,6.4,Minimal,19.7,Minimal,6.7,Minimal
+Corktown,Sports Bar,Wed,0.0,Minimal,7.5,Minimal,23.0,Light,7.8,Minimal
+Corktown,Sports Bar,Thu,0.0,Minimal,8.8,Minimal,31.8,Light,12.7,Minimal
+Corktown,Sports Bar,Fri,0.0,Minimal,12.4,Minimal,35.4,Light,32.9,Light
+Corktown,Sports Bar,Sat,0.0,Minimal,17.5,Minimal,38.8,Light,33.6,Light
+Corktown,Sports Bar,Sun,0.0,Minimal,12.8,Minimal,35.1,Light,12.3,Minimal
+Corktown,Cocktail Lounge,Mon,0.0,Minimal,0.2,Minimal,3.0,Minimal,2.6,Minimal
+Corktown,Cocktail Lounge,Tue,0.0,Minimal,0.4,Minimal,5.5,Minimal,4.9,Minimal
+Corktown,Cocktail Lounge,Wed,0.0,Minimal,1.0,Minimal,13.5,Minimal,12.0,Minimal
+Corktown,Cocktail Lounge,Thu,0.0,Minimal,2.8,Minimal,36.1,Light,36.5,Light
+Corktown,Cocktail Lounge,Fri,0.0,Minimal,2.7,Minimal,53.5,Moderate,66.5,High
+Corktown,Cocktail Lounge,Sat,0.0,Minimal,2.8,Minimal,54.2,Moderate,67.3,High
+Corktown,Cocktail Lounge,Sun,0.0,Minimal,0.7,Minimal,10.4,Minimal,9.2,Minimal
+Eastern Market,Fine Dining,Mon,0.0,Minimal,1.8,Minimal,2.5,Minimal,0.1,Minimal
+Eastern Market,Fine Dining,Tue,0.0,Minimal,4.3,Minimal,5.2,Minimal,0.3,Minimal
+Eastern Market,Fine Dining,Wed,0.0,Minimal,8.7,Minimal,10.6,Minimal,0.5,Minimal
+Eastern Market,Fine Dining,Thu,0.0,Minimal,16.4,Minimal,21.2,Light,1.6,Minimal
+Eastern Market,Fine Dining,Fri,0.0,Minimal,17.7,Minimal,29.1,Light,3.8,Minimal
+Eastern Market,Fine Dining,Sat,0.0,Minimal,21.5,Light,35.4,Light,4.7,Minimal
+Eastern Market,Fine Dining,Sun,0.0,Minimal,3.3,Minimal,4.6,Minimal,0.2,Minimal
+Eastern Market,Upscale Casual,Mon,0.9,Minimal,5.4,Minimal,3.6,Minimal,0.2,Minimal
+Eastern Market,Upscale Casual,Tue,1.5,Minimal,8.9,Minimal,5.9,Minimal,0.3,Minimal
+Eastern Market,Upscale Casual,Wed,2.4,Minimal,13.5,Minimal,9.6,Minimal,0.7,Minimal
+Eastern Market,Upscale Casual,Thu,3.9,Minimal,19.9,Minimal,14.9,Minimal,1.4,Minimal
+Eastern Market,Upscale Casual,Fri,5.5,Minimal,22.1,Light,21.0,Light,2.9,Minimal
+Eastern Market,Upscale Casual,Sat,11.9,Minimal,41.1,Moderate,25.0,Light,3.1,Minimal
+Eastern Market,Upscale Casual,Sun,4.5,Minimal,18.1,Minimal,10.2,Minimal,0.4,Minimal
+Eastern Market,Casual Dining,Mon,2.7,Minimal,11.6,Minimal,5.5,Minimal,0.3,Minimal
+Eastern Market,Casual Dining,Tue,3.1,Minimal,13.6,Minimal,6.4,Minimal,0.4,Minimal
+Eastern Market,Casual Dining,Wed,4.0,Minimal,16.5,Minimal,8.4,Minimal,0.6,Minimal
+Eastern Market,Casual Dining,Thu,5.4,Minimal,21.3,Light,11.4,Minimal,1.0,Minimal
+Eastern Market,Casual Dining,Fri,7.6,Minimal,26.1,Light,15.9,Minimal,2.0,Minimal
+Eastern Market,Casual Dining,Sat,10.8,Minimal,43.7,Moderate,21.4,Light,2.4,Minimal
+Eastern Market,Casual Dining,Sun,6.6,Minimal,30.6,Light,13.7,Minimal,0.6,Minimal
+Eastern Market,Fast Casual,Mon,7.9,Minimal,30.2,Light,4.3,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Tue,9.1,Minimal,34.7,Light,4.9,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Wed,10.3,Minimal,39.2,Light,5.5,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Thu,11.1,Minimal,39.6,Light,7.0,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Fri,12.3,Minimal,43.8,Moderate,7.7,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Sat,11.2,Minimal,47.4,Moderate,10.8,Minimal,0.0,Minimal
+Eastern Market,Fast Casual,Sun,6.8,Minimal,28.7,Light,6.6,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Mon,34.0,Light,17.7,Minimal,1.2,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Tue,37.6,Light,19.6,Minimal,1.3,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Wed,42.3,Moderate,22.0,Light,1.5,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Thu,43.5,Moderate,23.4,Light,2.1,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Fri,44.7,Moderate,25.4,Light,3.1,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Sat,45.6,Moderate,34.9,Light,4.0,Minimal,0.0,Minimal
+Eastern Market,Coffee Shop,Sun,26.4,Light,23.2,Light,2.5,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Mon,17.4,Minimal,12.5,Minimal,0.2,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Tue,18.0,Minimal,13.0,Minimal,0.2,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Wed,20.6,Light,14.8,Minimal,0.3,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Thu,25.4,Light,19.7,Minimal,0.7,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Fri,33.0,Light,29.1,Light,1.4,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Sat,54.5,Moderate,76.6,High,2.0,Minimal,0.0,Minimal
+Eastern Market,Breakfast / Brunch Cafe,Sun,43.8,Moderate,71.4,High,1.3,Minimal,0.0,Minimal
+Eastern Market,Sports Bar,Mon,0.0,Minimal,9.3,Minimal,7.3,Minimal,1.4,Minimal
+Eastern Market,Sports Bar,Tue,0.0,Minimal,9.3,Minimal,7.1,Minimal,1.3,Minimal
+Eastern Market,Sports Bar,Wed,0.0,Minimal,10.7,Minimal,8.2,Minimal,1.5,Minimal
+Eastern Market,Sports Bar,Thu,0.0,Minimal,12.5,Minimal,11.2,Minimal,2.4,Minimal
+Eastern Market,Sports Bar,Fri,0.0,Minimal,18.0,Minimal,12.7,Minimal,6.3,Minimal
+Eastern Market,Sports Bar,Sat,0.0,Minimal,28.9,Light,15.8,Minimal,7.4,Minimal
+Eastern Market,Sports Bar,Sun,0.0,Minimal,20.4,Light,13.8,Minimal,2.6,Minimal
+Eastern Market,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,1.1,Minimal,0.5,Minimal
+Eastern Market,Cocktail Lounge,Tue,0.0,Minimal,0.6,Minimal,2.0,Minimal,0.9,Minimal
+Eastern Market,Cocktail Lounge,Wed,0.0,Minimal,1.4,Minimal,4.9,Minimal,2.3,Minimal
+Eastern Market,Cocktail Lounge,Thu,0.0,Minimal,4.1,Minimal,13.1,Minimal,7.1,Minimal
+Eastern Market,Cocktail Lounge,Fri,0.0,Minimal,4.1,Minimal,19.6,Minimal,13.0,Minimal
+Eastern Market,Cocktail Lounge,Sat,0.0,Minimal,4.4,Minimal,21.1,Light,14.0,Minimal
+Eastern Market,Cocktail Lounge,Sun,0.0,Minimal,1.2,Minimal,4.1,Minimal,1.9,Minimal
+New Center / North End,Fine Dining,Mon,0.0,Minimal,1.7,Minimal,2.7,Minimal,0.1,Minimal
+New Center / North End,Fine Dining,Tue,0.0,Minimal,3.8,Minimal,5.4,Minimal,0.2,Minimal
+New Center / North End,Fine Dining,Wed,0.0,Minimal,7.2,Minimal,10.3,Minimal,0.4,Minimal
+New Center / North End,Fine Dining,Thu,0.0,Minimal,12.7,Minimal,19.4,Minimal,1.1,Minimal
+New Center / North End,Fine Dining,Fri,0.0,Minimal,13.1,Minimal,25.5,Light,2.6,Minimal
+New Center / North End,Fine Dining,Sat,0.0,Minimal,13.1,Minimal,25.6,Light,2.6,Minimal
+New Center / North End,Fine Dining,Sun,0.0,Minimal,1.6,Minimal,2.6,Minimal,0.1,Minimal
+New Center / North End,Upscale Casual,Mon,0.8,Minimal,5.7,Minimal,4.5,Minimal,0.2,Minimal
+New Center / North End,Upscale Casual,Tue,1.2,Minimal,8.9,Minimal,7.0,Minimal,0.3,Minimal
+New Center / North End,Upscale Casual,Wed,1.8,Minimal,12.5,Minimal,10.5,Minimal,0.6,Minimal
+New Center / North End,Upscale Casual,Thu,2.6,Minimal,16.9,Minimal,14.9,Minimal,1.1,Minimal
+New Center / North End,Upscale Casual,Fri,3.3,Minimal,16.9,Minimal,19.0,Minimal,2.1,Minimal
+New Center / North End,Upscale Casual,Sat,4.5,Minimal,20.0,Light,14.4,Minimal,1.4,Minimal
+New Center / North End,Upscale Casual,Sun,1.5,Minimal,7.5,Minimal,5.0,Minimal,0.2,Minimal
+New Center / North End,Casual Dining,Mon,2.3,Minimal,12.7,Minimal,7.1,Minimal,0.4,Minimal
+New Center / North End,Casual Dining,Tue,2.7,Minimal,14.9,Minimal,8.3,Minimal,0.4,Minimal
+New Center / North End,Casual Dining,Wed,3.2,Minimal,16.9,Minimal,10.1,Minimal,0.6,Minimal
+New Center / North End,Casual Dining,Thu,3.9,Minimal,19.4,Minimal,12.3,Minimal,0.9,Minimal
+New Center / North End,Casual Dining,Fri,4.6,Minimal,20.5,Light,14.7,Minimal,1.4,Minimal
+New Center / North End,Casual Dining,Sat,3.3,Minimal,17.2,Minimal,9.9,Minimal,0.9,Minimal
+New Center / North End,Casual Dining,Sun,1.8,Minimal,10.8,Minimal,5.7,Minimal,0.2,Minimal
+New Center / North End,Fast Casual,Mon,7.5,Minimal,36.5,Light,6.1,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Tue,8.6,Minimal,41.7,Moderate,7.0,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Wed,9.1,Minimal,44.2,Moderate,7.4,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Thu,8.6,Minimal,39.1,Light,8.2,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Fri,7.8,Minimal,35.5,Light,7.4,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Sat,2.5,Minimal,13.4,Minimal,3.6,Minimal,0.0,Minimal
+New Center / North End,Fast Casual,Sun,1.1,Minimal,5.8,Minimal,1.6,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Mon,30.7,Light,20.5,Light,1.6,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Tue,34.0,Light,22.7,Light,1.8,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Wed,36.1,Light,24.0,Light,1.9,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Thu,32.9,Light,22.7,Light,2.4,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Fri,28.2,Light,20.5,Light,3.0,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Sat,10.7,Minimal,10.5,Minimal,1.4,Minimal,0.0,Minimal
+New Center / North End,Coffee Shop,Sun,4.7,Minimal,5.3,Minimal,0.7,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Mon,12.5,Minimal,11.5,Minimal,0.2,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Tue,13.0,Minimal,12.0,Minimal,0.3,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Wed,14.4,Minimal,13.2,Minimal,0.3,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Thu,16.6,Minimal,16.5,Minimal,0.7,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Fri,19.7,Minimal,22.2,Light,1.3,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Sat,23.0,Light,41.2,Moderate,1.3,Minimal,0.0,Minimal
+New Center / North End,Breakfast / Brunch Cafe,Sun,18.9,Minimal,39.5,Light,0.9,Minimal,0.0,Minimal
+New Center / North End,Sports Bar,Mon,0.0,Minimal,8.1,Minimal,7.5,Minimal,1.1,Minimal
+New Center / North End,Sports Bar,Tue,0.0,Minimal,8.2,Minimal,7.4,Minimal,1.0,Minimal
+New Center / North End,Sports Bar,Wed,0.0,Minimal,9.2,Minimal,8.3,Minimal,1.2,Minimal
+New Center / North End,Sports Bar,Thu,0.0,Minimal,10.1,Minimal,10.7,Minimal,1.8,Minimal
+New Center / North End,Sports Bar,Fri,0.0,Minimal,13.5,Minimal,11.3,Minimal,4.4,Minimal
+New Center / North End,Sports Bar,Sat,0.0,Minimal,16.1,Minimal,10.4,Minimal,3.8,Minimal
+New Center / North End,Sports Bar,Sun,0.0,Minimal,11.1,Minimal,8.9,Minimal,1.3,Minimal
+New Center / North End,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,1.1,Minimal,0.4,Minimal
+New Center / North End,Cocktail Lounge,Tue,0.0,Minimal,0.5,Minimal,2.0,Minimal,0.8,Minimal
+New Center / North End,Cocktail Lounge,Wed,0.0,Minimal,1.1,Minimal,4.6,Minimal,1.7,Minimal
+New Center / North End,Cocktail Lounge,Thu,0.0,Minimal,3.1,Minimal,11.8,Minimal,5.0,Minimal
+New Center / North End,Cocktail Lounge,Fri,0.0,Minimal,3.0,Minimal,17.1,Minimal,8.8,Minimal
+New Center / North End,Cocktail Lounge,Sat,0.0,Minimal,2.8,Minimal,16.0,Minimal,8.3,Minimal
+New Center / North End,Cocktail Lounge,Sun,0.0,Minimal,0.7,Minimal,2.7,Minimal,1.0,Minimal
+Riverfront / RiverWalk,Fine Dining,Mon,0.0,Minimal,2.0,Minimal,5.0,Minimal,0.3,Minimal
+Riverfront / RiverWalk,Fine Dining,Tue,0.0,Minimal,4.7,Minimal,10.5,Minimal,0.6,Minimal
+Riverfront / RiverWalk,Fine Dining,Wed,0.0,Minimal,9.4,Minimal,21.0,Light,1.2,Minimal
+Riverfront / RiverWalk,Fine Dining,Thu,0.0,Minimal,17.6,Minimal,41.9,Moderate,3.7,Minimal
+Riverfront / RiverWalk,Fine Dining,Fri,0.0,Minimal,19.1,Minimal,58.0,Moderate,8.9,Minimal
+Riverfront / RiverWalk,Fine Dining,Sat,0.0,Minimal,21.7,Light,65.9,High,10.1,Minimal
+Riverfront / RiverWalk,Fine Dining,Sun,0.0,Minimal,3.6,Minimal,9.4,Minimal,0.4,Minimal
+Riverfront / RiverWalk,Upscale Casual,Mon,0.5,Minimal,6.1,Minimal,7.4,Minimal,0.5,Minimal
+Riverfront / RiverWalk,Upscale Casual,Tue,0.8,Minimal,9.8,Minimal,12.0,Minimal,0.8,Minimal
+Riverfront / RiverWalk,Upscale Casual,Wed,1.4,Minimal,14.7,Minimal,19.3,Minimal,1.5,Minimal
+Riverfront / RiverWalk,Upscale Casual,Thu,2.1,Minimal,21.6,Light,29.7,Light,3.2,Minimal
+Riverfront / RiverWalk,Upscale Casual,Fri,3.0,Minimal,24.4,Light,42.7,Moderate,7.0,Minimal
+Riverfront / RiverWalk,Upscale Casual,Sat,5.7,Minimal,39.1,Light,43.7,Moderate,6.4,Minimal
+Riverfront / RiverWalk,Upscale Casual,Sun,2.5,Minimal,20.1,Light,20.9,Light,1.0,Minimal
+Riverfront / RiverWalk,Casual Dining,Mon,1.5,Minimal,13.1,Minimal,11.4,Minimal,0.8,Minimal
+Riverfront / RiverWalk,Casual Dining,Tue,1.8,Minimal,15.2,Minimal,13.2,Minimal,1.0,Minimal
+Riverfront / RiverWalk,Casual Dining,Wed,2.2,Minimal,18.4,Minimal,17.2,Minimal,1.4,Minimal
+Riverfront / RiverWalk,Casual Dining,Thu,3.0,Minimal,23.2,Light,23.0,Light,2.4,Minimal
+Riverfront / RiverWalk,Casual Dining,Fri,4.3,Minimal,29.3,Light,32.8,Light,4.8,Minimal
+Riverfront / RiverWalk,Casual Dining,Sat,5.0,Minimal,39.5,Light,35.5,Light,4.7,Minimal
+Riverfront / RiverWalk,Casual Dining,Sun,3.8,Minimal,34.3,Light,28.2,Light,1.5,Minimal
+Riverfront / RiverWalk,Fast Casual,Mon,4.6,Minimal,34.8,Light,9.0,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Tue,5.2,Minimal,39.3,Light,10.2,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Wed,5.9,Minimal,44.2,Moderate,11.5,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Thu,6.2,Minimal,43.7,Moderate,14.2,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Fri,7.1,Minimal,50.2,Moderate,16.4,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Sat,4.8,Minimal,40.3,Moderate,16.9,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Fast Casual,Sun,4.0,Minimal,32.9,Light,13.8,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Mon,19.7,Minimal,20.2,Light,2.5,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Tue,21.5,Light,22.1,Light,2.7,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Wed,24.0,Light,24.7,Light,3.1,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Thu,24.2,Light,25.8,Light,4.2,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Fri,25.8,Light,29.0,Light,6.6,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Sat,19.8,Minimal,30.0,Light,6.3,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Coffee Shop,Sun,15.2,Minimal,26.5,Light,5.2,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Mon,9.7,Minimal,13.8,Minimal,0.5,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Tue,10.0,Minimal,14.2,Minimal,0.5,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Wed,11.3,Minimal,16.1,Minimal,0.5,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Thu,13.9,Minimal,21.4,Light,1.4,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Fri,18.4,Minimal,32.1,Light,2.9,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Sat,26.9,Light,74.8,High,3.6,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Breakfast / Brunch Cafe,Sun,24.3,Light,78.1,High,2.6,Minimal,0.0,Minimal
+Riverfront / RiverWalk,Sports Bar,Mon,0.0,Minimal,10.2,Minimal,14.8,Minimal,3.3,Minimal
+Riverfront / RiverWalk,Sports Bar,Tue,0.0,Minimal,10.1,Minimal,14.2,Minimal,3.0,Minimal
+Riverfront / RiverWalk,Sports Bar,Wed,0.0,Minimal,11.7,Minimal,16.4,Minimal,3.5,Minimal
+Riverfront / RiverWalk,Sports Bar,Thu,0.0,Minimal,13.5,Minimal,22.3,Light,5.6,Minimal
+Riverfront / RiverWalk,Sports Bar,Fri,0.0,Minimal,19.7,Minimal,25.5,Light,14.8,Minimal
+Riverfront / RiverWalk,Sports Bar,Sat,0.0,Minimal,28.5,Light,28.7,Light,15.5,Minimal
+Riverfront / RiverWalk,Sports Bar,Sun,0.0,Minimal,22.3,Light,27.8,Light,6.1,Minimal
+Riverfront / RiverWalk,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,2.1,Minimal,1.2,Minimal
+Riverfront / RiverWalk,Cocktail Lounge,Tue,0.0,Minimal,0.6,Minimal,4.0,Minimal,2.2,Minimal
+Riverfront / RiverWalk,Cocktail Lounge,Wed,0.0,Minimal,1.5,Minimal,9.6,Minimal,5.3,Minimal
+Riverfront / RiverWalk,Cocktail Lounge,Thu,0.0,Minimal,4.4,Minimal,25.9,Light,16.3,Minimal
+Riverfront / RiverWalk,Cocktail Lounge,Fri,0.0,Minimal,4.4,Minimal,38.9,Light,30.2,Light
+Riverfront / RiverWalk,Cocktail Lounge,Sat,0.0,Minimal,4.5,Minimal,39.8,Light,30.9,Light
+Riverfront / RiverWalk,Cocktail Lounge,Sun,0.0,Minimal,1.3,Minimal,8.1,Minimal,4.5,Minimal
+Core City / Woodbridge,Fine Dining,Mon,0.0,Minimal,1.0,Minimal,5.3,Minimal,0.5,Minimal
+Core City / Woodbridge,Fine Dining,Tue,0.0,Minimal,2.3,Minimal,11.1,Minimal,1.0,Minimal
+Core City / Woodbridge,Fine Dining,Wed,0.0,Minimal,4.6,Minimal,22.3,Light,2.0,Minimal
+Core City / Woodbridge,Fine Dining,Thu,0.0,Minimal,8.6,Minimal,44.9,Moderate,6.2,Minimal
+Core City / Woodbridge,Fine Dining,Fri,0.0,Minimal,9.2,Minimal,61.5,Moderate,14.8,Minimal
+Core City / Woodbridge,Fine Dining,Sat,0.0,Minimal,10.6,Minimal,70.4,High,16.9,Minimal
+Core City / Woodbridge,Fine Dining,Sun,0.0,Minimal,1.5,Minimal,8.7,Minimal,0.6,Minimal
+Core City / Woodbridge,Upscale Casual,Mon,0.3,Minimal,2.9,Minimal,7.8,Minimal,0.8,Minimal
+Core City / Woodbridge,Upscale Casual,Tue,0.5,Minimal,4.8,Minimal,12.8,Minimal,1.2,Minimal
+Core City / Woodbridge,Upscale Casual,Wed,0.8,Minimal,7.2,Minimal,20.7,Light,2.6,Minimal
+Core City / Woodbridge,Upscale Casual,Thu,1.3,Minimal,10.8,Minimal,32.5,Light,5.5,Minimal
+Core City / Woodbridge,Upscale Casual,Fri,1.9,Minimal,11.9,Minimal,45.8,Moderate,11.7,Minimal
+Core City / Woodbridge,Upscale Casual,Sat,3.6,Minimal,19.3,Minimal,47.6,Moderate,10.8,Minimal
+Core City / Woodbridge,Upscale Casual,Sun,1.3,Minimal,8.2,Minimal,18.8,Minimal,1.4,Minimal
+Core City / Woodbridge,Casual Dining,Mon,0.9,Minimal,6.3,Minimal,11.9,Minimal,1.4,Minimal
+Core City / Woodbridge,Casual Dining,Tue,1.1,Minimal,7.4,Minimal,14.1,Minimal,1.6,Minimal
+Core City / Woodbridge,Casual Dining,Wed,1.4,Minimal,9.1,Minimal,18.6,Minimal,2.4,Minimal
+Core City / Woodbridge,Casual Dining,Thu,1.9,Minimal,11.8,Minimal,25.7,Light,4.2,Minimal
+Core City / Woodbridge,Casual Dining,Fri,2.7,Minimal,14.5,Minimal,35.6,Light,8.1,Minimal
+Core City / Woodbridge,Casual Dining,Sat,3.1,Minimal,19.9,Minimal,39.3,Light,8.2,Minimal
+Core City / Woodbridge,Casual Dining,Sun,1.9,Minimal,13.6,Minimal,24.6,Light,2.0,Minimal
+Core City / Woodbridge,Fast Casual,Mon,2.8,Minimal,16.6,Minimal,9.5,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Tue,3.2,Minimal,19.2,Minimal,10.9,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Wed,3.7,Minimal,22.1,Light,12.6,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Thu,4.1,Minimal,22.7,Light,16.3,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Fri,4.5,Minimal,25.1,Light,17.9,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Sat,3.1,Minimal,20.7,Light,19.1,Minimal,0.0,Minimal
+Core City / Woodbridge,Fast Casual,Sun,1.8,Minimal,12.1,Minimal,11.1,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Mon,11.8,Minimal,9.7,Minimal,2.6,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Tue,13.1,Minimal,10.7,Minimal,2.9,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Wed,15.0,Minimal,12.3,Minimal,3.3,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Thu,15.7,Minimal,13.3,Minimal,4.8,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Fri,16.2,Minimal,14.5,Minimal,7.2,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Sat,12.8,Minimal,15.4,Minimal,7.1,Minimal,0.0,Minimal
+Core City / Woodbridge,Coffee Shop,Sun,7.1,Minimal,9.8,Minimal,4.2,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Mon,5.8,Minimal,6.6,Minimal,0.5,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Tue,6.1,Minimal,6.8,Minimal,0.5,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Wed,7.0,Minimal,7.9,Minimal,0.6,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Thu,8.7,Minimal,10.6,Minimal,1.5,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Fri,11.3,Minimal,15.7,Minimal,3.1,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Sat,16.7,Minimal,36.7,Light,3.9,Minimal,0.0,Minimal
+Core City / Woodbridge,Breakfast / Brunch Cafe,Sun,13.4,Minimal,34.3,Light,2.6,Minimal,0.0,Minimal
+Core City / Woodbridge,Sports Bar,Mon,0.0,Minimal,4.9,Minimal,15.6,Minimal,5.4,Minimal
+Core City / Woodbridge,Sports Bar,Tue,0.0,Minimal,4.9,Minimal,15.0,Minimal,4.9,Minimal
+Core City / Woodbridge,Sports Bar,Wed,0.0,Minimal,5.7,Minimal,17.5,Minimal,5.8,Minimal
+Core City / Woodbridge,Sports Bar,Thu,0.0,Minimal,6.6,Minimal,24.1,Light,9.4,Minimal
+Core City / Woodbridge,Sports Bar,Fri,0.0,Minimal,9.5,Minimal,27.1,Light,24.6,Light
+Core City / Woodbridge,Sports Bar,Sat,0.0,Minimal,13.9,Minimal,30.9,Light,26.1,Light
+Core City / Woodbridge,Sports Bar,Sun,0.0,Minimal,9.8,Minimal,26.8,Light,9.2,Minimal
+Core City / Woodbridge,Cocktail Lounge,Mon,0.0,Minimal,0.2,Minimal,2.2,Minimal,1.9,Minimal
+Core City / Woodbridge,Cocktail Lounge,Tue,0.0,Minimal,0.3,Minimal,4.2,Minimal,3.6,Minimal
+Core City / Woodbridge,Cocktail Lounge,Wed,0.0,Minimal,0.7,Minimal,10.3,Minimal,8.9,Minimal
+Core City / Woodbridge,Cocktail Lounge,Thu,0.0,Minimal,2.1,Minimal,27.6,Light,27.1,Light
+Core City / Woodbridge,Cocktail Lounge,Fri,0.0,Minimal,2.1,Minimal,41.1,Moderate,49.8,Moderate
+Core City / Woodbridge,Cocktail Lounge,Sat,0.0,Minimal,2.2,Minimal,42.3,Moderate,51.3,Moderate
+Core City / Woodbridge,Cocktail Lounge,Sun,0.0,Minimal,0.6,Minimal,7.9,Minimal,6.8,Minimal
+Mexicantown,Fine Dining,Mon,0.0,Minimal,1.6,Minimal,5.4,Minimal,0.3,Minimal
+Mexicantown,Fine Dining,Tue,0.0,Minimal,3.5,Minimal,10.7,Minimal,0.6,Minimal
+Mexicantown,Fine Dining,Wed,0.0,Minimal,6.9,Minimal,20.9,Light,1.1,Minimal
+Mexicantown,Fine Dining,Thu,0.0,Minimal,12.7,Minimal,41.1,Moderate,3.4,Minimal
+Mexicantown,Fine Dining,Fri,0.0,Minimal,13.6,Minimal,56.0,Moderate,8.2,Minimal
+Mexicantown,Fine Dining,Sat,0.0,Minimal,15.2,Minimal,62.7,Moderate,9.1,Minimal
+Mexicantown,Fine Dining,Sun,0.0,Minimal,2.4,Minimal,8.4,Minimal,0.3,Minimal
+Mexicantown,Upscale Casual,Mon,0.4,Minimal,5.0,Minimal,8.3,Minimal,0.5,Minimal
+Mexicantown,Upscale Casual,Tue,0.7,Minimal,7.6,Minimal,12.7,Minimal,0.8,Minimal
+Mexicantown,Upscale Casual,Wed,1.0,Minimal,11.1,Minimal,19.7,Minimal,1.5,Minimal
+Mexicantown,Upscale Casual,Thu,1.6,Minimal,15.8,Minimal,29.6,Light,3.1,Minimal
+Mexicantown,Upscale Casual,Fri,2.2,Minimal,17.2,Minimal,41.0,Moderate,6.3,Minimal
+Mexicantown,Upscale Casual,Sat,3.9,Minimal,26.7,Light,40.6,Moderate,5.6,Minimal
+Mexicantown,Upscale Casual,Sun,1.6,Minimal,13.0,Minimal,18.4,Minimal,0.8,Minimal
+Mexicantown,Casual Dining,Mon,1.3,Minimal,11.0,Minimal,13.0,Minimal,0.9,Minimal
+Mexicantown,Casual Dining,Tue,1.4,Minimal,12.1,Minimal,14.3,Minimal,1.0,Minimal
+Mexicantown,Casual Dining,Wed,1.7,Minimal,14.2,Minimal,18.0,Minimal,1.4,Minimal
+Mexicantown,Casual Dining,Thu,2.2,Minimal,17.3,Minimal,23.2,Light,2.3,Minimal
+Mexicantown,Casual Dining,Fri,3.0,Minimal,20.5,Light,31.2,Light,4.3,Minimal
+Mexicantown,Casual Dining,Sat,3.3,Minimal,26.5,Light,32.3,Light,4.1,Minimal
+Mexicantown,Casual Dining,Sun,2.4,Minimal,21.8,Light,24.3,Light,1.2,Minimal
+Mexicantown,Fast Casual,Mon,4.0,Minimal,30.4,Light,10.7,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Tue,4.3,Minimal,32.2,Light,11.3,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Wed,4.7,Minimal,35.0,Light,12.3,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Thu,4.7,Minimal,33.0,Light,14.6,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Fri,5.0,Minimal,35.0,Light,15.5,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Sat,3.1,Minimal,26.2,Light,14.9,Minimal,0.0,Minimal
+Mexicantown,Fast Casual,Sun,2.4,Minimal,19.9,Minimal,11.4,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Mon,16.8,Minimal,17.4,Minimal,2.9,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Tue,17.4,Minimal,17.9,Minimal,3.0,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Wed,18.8,Minimal,19.4,Minimal,3.3,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Thu,18.2,Minimal,19.4,Minimal,4.3,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Fri,18.0,Minimal,20.3,Light,6.2,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Sat,13.0,Minimal,19.6,Minimal,5.6,Minimal,0.0,Minimal
+Mexicantown,Coffee Shop,Sun,9.3,Minimal,16.2,Minimal,4.3,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Mon,7.6,Minimal,10.8,Minimal,0.5,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Tue,7.6,Minimal,10.8,Minimal,0.5,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Wed,8.5,Minimal,12.1,Minimal,0.5,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Thu,10.2,Minimal,15.7,Minimal,1.4,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Fri,13.0,Minimal,22.7,Light,2.8,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Sat,18.6,Minimal,51.7,Moderate,3.4,Minimal,0.0,Minimal
+Mexicantown,Breakfast / Brunch Cafe,Sun,16.4,Minimal,52.9,Moderate,2.4,Minimal,0.0,Minimal
+Mexicantown,Sports Bar,Mon,0.0,Minimal,7.8,Minimal,15.3,Minimal,3.2,Minimal
+Mexicantown,Sports Bar,Tue,0.0,Minimal,7.6,Minimal,14.4,Minimal,2.9,Minimal
+Mexicantown,Sports Bar,Wed,0.0,Minimal,8.7,Minimal,16.5,Minimal,3.3,Minimal
+Mexicantown,Sports Bar,Thu,0.0,Minimal,9.8,Minimal,22.1,Light,5.2,Minimal
+Mexicantown,Sports Bar,Fri,0.0,Minimal,14.0,Minimal,24.5,Light,13.5,Minimal
+Mexicantown,Sports Bar,Sat,0.0,Minimal,19.8,Minimal,27.0,Light,13.9,Minimal
+Mexicantown,Sports Bar,Sun,0.0,Minimal,15.1,Minimal,25.6,Light,5.3,Minimal
+Mexicantown,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,2.3,Minimal,1.2,Minimal
+Mexicantown,Cocktail Lounge,Tue,0.0,Minimal,0.5,Minimal,4.0,Minimal,2.1,Minimal
+Mexicantown,Cocktail Lounge,Wed,0.0,Minimal,1.1,Minimal,9.6,Minimal,5.1,Minimal
+Mexicantown,Cocktail Lounge,Thu,0.0,Minimal,3.2,Minimal,25.3,Light,15.1,Minimal
+Mexicantown,Cocktail Lounge,Fri,0.0,Minimal,3.1,Minimal,37.6,Light,27.7,Light
+Mexicantown,Cocktail Lounge,Sat,0.0,Minimal,3.2,Minimal,38.1,Light,28.0,Light
+Mexicantown,Cocktail Lounge,Sun,0.0,Minimal,0.9,Minimal,7.5,Minimal,3.9,Minimal
+Foxtown / Stadium District,Fine Dining,Mon,0.0,Minimal,1.9,Minimal,8.6,Minimal,1.0,Minimal
+Foxtown / Stadium District,Fine Dining,Tue,0.0,Minimal,4.3,Minimal,17.6,Minimal,2.2,Minimal
+Foxtown / Stadium District,Fine Dining,Wed,0.0,Minimal,8.4,Minimal,34.2,Light,4.3,Minimal
+Foxtown / Stadium District,Fine Dining,Thu,0.0,Minimal,15.4,Minimal,66.9,High,12.8,Minimal
+Foxtown / Stadium District,Fine Dining,Fri,0.0,Minimal,16.2,Minimal,89.9,Peak,30.1,Light
+Foxtown / Stadium District,Fine Dining,Sat,0.0,Minimal,17.6,Minimal,97.5,Peak,32.6,Light
+Foxtown / Stadium District,Fine Dining,Sun,0.0,Minimal,2.4,Minimal,11.5,Minimal,1.0,Minimal
+Foxtown / Stadium District,Upscale Casual,Mon,0.6,Minimal,6.0,Minimal,13.4,Minimal,1.8,Minimal
+Foxtown / Stadium District,Upscale Casual,Tue,1.0,Minimal,9.6,Minimal,21.5,Light,2.9,Minimal
+Foxtown / Stadium District,Upscale Casual,Wed,1.6,Minimal,13.9,Minimal,33.2,Light,5.8,Minimal
+Foxtown / Stadium District,Upscale Casual,Thu,2.4,Minimal,19.7,Minimal,49.6,Moderate,11.8,Minimal
+Foxtown / Stadium District,Upscale Casual,Fri,3.3,Minimal,20.8,Light,66.6,High,23.7,Light
+Foxtown / Stadium District,Upscale Casual,Sat,5.6,Minimal,30.0,Light,61.3,Moderate,19.4,Minimal
+Foxtown / Stadium District,Upscale Casual,Sun,2.0,Minimal,12.7,Minimal,24.1,Light,2.5,Minimal
+Foxtown / Stadium District,Casual Dining,Mon,1.9,Minimal,13.2,Minimal,20.9,Light,3.4,Minimal
+Foxtown / Stadium District,Casual Dining,Tue,2.3,Minimal,15.5,Minimal,24.5,Light,4.0,Minimal
+Foxtown / Stadium District,Casual Dining,Wed,2.8,Minimal,18.1,Minimal,30.8,Light,5.6,Minimal
+Foxtown / Stadium District,Casual Dining,Thu,3.6,Minimal,22.1,Light,39.9,Light,9.0,Minimal
+Foxtown / Stadium District,Casual Dining,Fri,4.7,Minimal,25.2,Light,51.5,Moderate,16.3,Minimal
+Foxtown / Stadium District,Casual Dining,Sat,4.6,Minimal,29.0,Light,47.6,Moderate,13.8,Minimal
+Foxtown / Stadium District,Casual Dining,Sun,2.8,Minimal,20.2,Light,30.3,Light,3.5,Minimal
+Foxtown / Stadium District,Fast Casual,Mon,6.1,Minimal,36.5,Light,17.3,Minimal,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Tue,7.0,Minimal,41.9,Moderate,19.9,Minimal,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Wed,7.7,Minimal,45.7,Moderate,21.7,Light,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Thu,7.8,Minimal,43.3,Moderate,25.8,Light,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Fri,7.8,Minimal,43.5,Moderate,25.8,Light,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Sat,4.2,Minimal,27.7,Light,21.2,Light,0.0,Minimal
+Foxtown / Stadium District,Fast Casual,Sun,2.4,Minimal,16.2,Minimal,12.4,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Mon,25.5,Light,20.8,Light,4.7,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Tue,28.3,Light,23.1,Light,5.2,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Wed,30.8,Light,25.1,Light,5.7,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Thu,30.0,Light,25.3,Light,7.6,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Fri,28.2,Light,25.1,Light,10.4,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Sat,17.4,Minimal,20.8,Light,8.0,Minimal,0.0,Minimal
+Foxtown / Stadium District,Coffee Shop,Sun,9.8,Minimal,13.4,Minimal,4.8,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Mon,11.4,Minimal,12.8,Minimal,0.8,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Tue,11.9,Minimal,13.3,Minimal,0.8,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Wed,13.3,Minimal,14.9,Minimal,0.9,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Thu,15.9,Minimal,19.4,Minimal,2.3,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Fri,19.8,Minimal,27.4,Light,4.6,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Sat,26.8,Light,58.8,Moderate,5.2,Minimal,0.0,Minimal
+Foxtown / Stadium District,Breakfast / Brunch Cafe,Sun,22.1,Light,56.5,Moderate,3.5,Minimal,0.0,Minimal
+Foxtown / Stadium District,Sports Bar,Mon,0.0,Minimal,9.2,Minimal,24.5,Light,11.8,Minimal
+Foxtown / Stadium District,Sports Bar,Tue,0.0,Minimal,9.3,Minimal,23.8,Light,11.0,Minimal
+Foxtown / Stadium District,Sports Bar,Wed,0.0,Minimal,10.6,Minimal,27.2,Light,12.5,Minimal
+Foxtown / Stadium District,Sports Bar,Thu,0.0,Minimal,12.0,Minimal,36.3,Light,19.7,Minimal
+Foxtown / Stadium District,Sports Bar,Fri,0.0,Minimal,16.8,Minimal,39.6,Light,50.0,Moderate
+Foxtown / Stadium District,Sports Bar,Sat,0.0,Minimal,22.6,Light,41.5,Moderate,48.9,Moderate
+Foxtown / Stadium District,Sports Bar,Sun,0.0,Minimal,16.0,Minimal,36.6,Light,17.5,Minimal
+Foxtown / Stadium District,Cocktail Lounge,Mon,0.0,Minimal,0.3,Minimal,3.6,Minimal,4.3,Minimal
+Foxtown / Stadium District,Cocktail Lounge,Tue,0.0,Minimal,0.6,Minimal,6.6,Minimal,7.9,Minimal
+Foxtown / Stadium District,Cocktail Lounge,Wed,0.0,Minimal,1.4,Minimal,15.6,Minimal,18.8,Minimal
+Foxtown / Stadium District,Cocktail Lounge,Thu,0.0,Minimal,3.8,Minimal,40.9,Moderate,56.1,Moderate
+Foxtown / Stadium District,Cocktail Lounge,Fri,0.0,Minimal,3.4,Minimal,54.6,Moderate,92.1,Peak
+Foxtown / Stadium District,Cocktail Lounge,Sat,0.0,Minimal,3.4,Minimal,54.6,Moderate,92.1,Peak
+Foxtown / Stadium District,Cocktail Lounge,Sun,0.0,Minimal,0.9,Minimal,10.9,Minimal,13.1,Minimal
+Southwest Detroit,Fine Dining,Mon,0.0,Minimal,1.5,Minimal,5.1,Minimal,0.3,Minimal
+Southwest Detroit,Fine Dining,Tue,0.0,Minimal,3.3,Minimal,10.1,Minimal,0.5,Minimal
+Southwest Detroit,Fine Dining,Wed,0.0,Minimal,6.6,Minimal,19.9,Minimal,1.1,Minimal
+Southwest Detroit,Fine Dining,Thu,0.0,Minimal,12.1,Minimal,39.0,Light,3.3,Minimal
+Southwest Detroit,Fine Dining,Fri,0.0,Minimal,12.9,Minimal,53.1,Moderate,7.7,Minimal
+Southwest Detroit,Fine Dining,Sat,0.0,Minimal,14.5,Minimal,59.6,Moderate,8.7,Minimal
+Southwest Detroit,Fine Dining,Sun,0.0,Minimal,2.3,Minimal,8.0,Minimal,0.3,Minimal
+Southwest Detroit,Upscale Casual,Mon,0.4,Minimal,4.7,Minimal,7.9,Minimal,0.5,Minimal
+Southwest Detroit,Upscale Casual,Tue,0.6,Minimal,7.2,Minimal,12.0,Minimal,0.7,Minimal
+Southwest Detroit,Upscale Casual,Wed,1.0,Minimal,10.6,Minimal,18.7,Minimal,1.4,Minimal
+Southwest Detroit,Upscale Casual,Thu,1.5,Minimal,15.0,Minimal,28.1,Light,2.9,Minimal
+Southwest Detroit,Upscale Casual,Fri,2.0,Minimal,16.4,Minimal,38.9,Light,6.0,Minimal
+Southwest Detroit,Upscale Casual,Sat,3.7,Minimal,25.3,Light,38.5,Light,5.3,Minimal
+Southwest Detroit,Upscale Casual,Sun,1.6,Minimal,12.4,Minimal,17.5,Minimal,0.8,Minimal
+Southwest Detroit,Casual Dining,Mon,1.2,Minimal,10.4,Minimal,12.3,Minimal,0.9,Minimal
+Southwest Detroit,Casual Dining,Tue,1.3,Minimal,11.5,Minimal,13.6,Minimal,1.0,Minimal
+Southwest Detroit,Casual Dining,Wed,1.6,Minimal,13.5,Minimal,17.0,Minimal,1.3,Minimal
+Southwest Detroit,Casual Dining,Thu,2.1,Minimal,16.4,Minimal,22.0,Light,2.2,Minimal
+Southwest Detroit,Casual Dining,Fri,2.9,Minimal,19.5,Minimal,29.6,Light,4.1,Minimal
+Southwest Detroit,Casual Dining,Sat,3.2,Minimal,25.1,Light,30.7,Light,3.9,Minimal
+Southwest Detroit,Casual Dining,Sun,2.3,Minimal,20.7,Light,23.1,Light,1.2,Minimal
+Southwest Detroit,Fast Casual,Mon,3.8,Minimal,28.8,Light,10.2,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Tue,4.1,Minimal,30.6,Light,10.8,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Wed,4.4,Minimal,33.2,Light,11.7,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Thu,4.5,Minimal,31.3,Light,13.8,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Fri,4.7,Minimal,33.2,Light,14.7,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Sat,3.0,Minimal,24.9,Light,14.2,Minimal,0.0,Minimal
+Southwest Detroit,Fast Casual,Sun,2.3,Minimal,18.9,Minimal,10.8,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Mon,16.0,Minimal,16.5,Minimal,2.8,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Tue,16.5,Minimal,17.0,Minimal,2.8,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Wed,17.9,Minimal,18.4,Minimal,3.1,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Thu,17.3,Minimal,18.4,Minimal,4.1,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Fri,17.1,Minimal,19.3,Minimal,5.9,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Sat,12.3,Minimal,18.6,Minimal,5.3,Minimal,0.0,Minimal
+Southwest Detroit,Coffee Shop,Sun,8.8,Minimal,15.4,Minimal,4.1,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Mon,7.2,Minimal,10.2,Minimal,0.5,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Tue,7.2,Minimal,10.2,Minimal,0.5,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Wed,8.1,Minimal,11.4,Minimal,0.5,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Thu,9.7,Minimal,14.9,Minimal,1.3,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Fri,12.4,Minimal,21.6,Light,2.7,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Sat,17.7,Minimal,49.1,Moderate,3.2,Minimal,0.0,Minimal
+Southwest Detroit,Breakfast / Brunch Cafe,Sun,15.6,Minimal,50.2,Moderate,2.3,Minimal,0.0,Minimal
+Southwest Detroit,Sports Bar,Mon,0.0,Minimal,7.4,Minimal,14.6,Minimal,3.1,Minimal
+Southwest Detroit,Sports Bar,Tue,0.0,Minimal,7.2,Minimal,13.7,Minimal,2.8,Minimal
+Southwest Detroit,Sports Bar,Wed,0.0,Minimal,8.2,Minimal,15.6,Minimal,3.1,Minimal
+Southwest Detroit,Sports Bar,Thu,0.0,Minimal,9.3,Minimal,20.9,Light,5.0,Minimal
+Southwest Detroit,Sports Bar,Fri,0.0,Minimal,13.3,Minimal,23.3,Light,12.8,Minimal
+Southwest Detroit,Sports Bar,Sat,0.0,Minimal,18.8,Minimal,25.7,Light,13.2,Minimal
+Southwest Detroit,Sports Bar,Sun,0.0,Minimal,14.3,Minimal,24.3,Light,5.1,Minimal
+Southwest Detroit,Cocktail Lounge,Mon,0.0,Minimal,0.2,Minimal,2.1,Minimal,1.1,Minimal
+Southwest Detroit,Cocktail Lounge,Tue,0.0,Minimal,0.4,Minimal,3.8,Minimal,2.0,Minimal
+Southwest Detroit,Cocktail Lounge,Wed,0.0,Minimal,1.1,Minimal,9.1,Minimal,4.8,Minimal
+Southwest Detroit,Cocktail Lounge,Thu,0.0,Minimal,3.0,Minimal,24.0,Light,14.4,Minimal
+Southwest Detroit,Cocktail Lounge,Fri,0.0,Minimal,3.0,Minimal,35.7,Light,26.2,Light
+Southwest Detroit,Cocktail Lounge,Sat,0.0,Minimal,3.0,Minimal,36.2,Light,26.6,Light
+Southwest Detroit,Cocktail Lounge,Sun,0.0,Minimal,0.8,Minimal,7.1,Minimal,3.7,Minimal
+Downtown Detroit (Core),Fine Dining,Mon,0.0,Minimal,2.3,Minimal,6.6,Minimal,0.5,Minimal
+Downtown Detroit (Core),Fine Dining,Tue,0.0,Minimal,5.3,Minimal,13.6,Minimal,1.0,Minimal
+Downtown Detroit (Core),Fine Dining,Wed,0.0,Minimal,10.4,Minimal,26.5,Light,1.9,Minimal
+Downtown Detroit (Core),Fine Dining,Thu,0.0,Minimal,19.0,Minimal,51.8,Moderate,5.7,Minimal
+Downtown Detroit (Core),Fine Dining,Fri,0.0,Minimal,20.1,Light,69.6,High,13.4,Minimal
+Downtown Detroit (Core),Fine Dining,Sat,0.0,Minimal,21.8,Light,75.4,High,14.5,Minimal
+Downtown Detroit (Core),Fine Dining,Sun,0.0,Minimal,3.0,Minimal,8.9,Minimal,0.5,Minimal
+Downtown Detroit (Core),Upscale Casual,Mon,0.7,Minimal,7.4,Minimal,10.4,Minimal,0.8,Minimal
+Downtown Detroit (Core),Upscale Casual,Tue,1.1,Minimal,11.8,Minimal,16.6,Minimal,1.3,Minimal
+Downtown Detroit (Core),Upscale Casual,Wed,1.7,Minimal,17.2,Minimal,25.7,Light,2.6,Minimal
+Downtown Detroit (Core),Upscale Casual,Thu,2.6,Minimal,24.4,Light,38.4,Light,5.2,Minimal
+Downtown Detroit (Core),Upscale Casual,Fri,3.5,Minimal,25.8,Light,51.6,Moderate,10.5,Minimal
+Downtown Detroit (Core),Upscale Casual,Sat,5.9,Minimal,37.1,Light,47.4,Moderate,8.6,Minimal
+Downtown Detroit (Core),Upscale Casual,Sun,2.1,Minimal,15.6,Minimal,18.6,Minimal,1.1,Minimal
+Downtown Detroit (Core),Casual Dining,Mon,2.1,Minimal,16.3,Minimal,16.1,Minimal,1.5,Minimal
+Downtown Detroit (Core),Casual Dining,Tue,2.4,Minimal,19.2,Minimal,19.0,Minimal,1.8,Minimal
+Downtown Detroit (Core),Casual Dining,Wed,3.0,Minimal,22.4,Light,23.9,Light,2.5,Minimal
+Downtown Detroit (Core),Casual Dining,Thu,3.9,Minimal,27.3,Light,30.9,Light,4.0,Minimal
+Downtown Detroit (Core),Casual Dining,Fri,5.0,Minimal,31.1,Light,39.8,Light,7.3,Minimal
+Downtown Detroit (Core),Casual Dining,Sat,4.9,Minimal,35.8,Light,36.8,Light,6.1,Minimal
+Downtown Detroit (Core),Casual Dining,Sun,3.0,Minimal,25.0,Light,23.5,Light,1.6,Minimal
+Downtown Detroit (Core),Fast Casual,Mon,6.5,Minimal,45.1,Moderate,13.4,Minimal,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Tue,7.5,Minimal,51.8,Moderate,15.4,Minimal,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Wed,8.2,Minimal,56.5,Moderate,16.8,Minimal,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Thu,8.3,Minimal,53.6,Moderate,20.0,Light,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Fri,8.3,Minimal,53.7,Moderate,20.0,Light,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Sat,4.5,Minimal,34.2,Light,16.4,Minimal,0.0,Minimal
+Downtown Detroit (Core),Fast Casual,Sun,2.6,Minimal,20.0,Light,9.6,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Mon,27.2,Light,25.7,Light,3.6,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Tue,30.2,Light,28.5,Light,4.0,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Wed,32.9,Light,31.1,Light,4.4,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Thu,32.0,Light,31.3,Light,5.9,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Fri,30.1,Light,31.0,Light,8.0,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Sat,18.6,Minimal,25.8,Light,6.2,Minimal,0.0,Minimal
+Downtown Detroit (Core),Coffee Shop,Sun,10.4,Minimal,16.6,Minimal,3.7,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Mon,12.2,Minimal,15.8,Minimal,0.6,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Tue,12.7,Minimal,16.5,Minimal,0.6,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Wed,14.2,Minimal,18.5,Minimal,0.7,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Thu,17.0,Minimal,24.0,Light,1.7,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Fri,21.2,Light,33.9,Light,3.5,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Sat,28.6,Light,72.7,High,4.0,Minimal,0.0,Minimal
+Downtown Detroit (Core),Breakfast / Brunch Cafe,Sun,23.6,Light,69.8,High,2.7,Minimal,0.0,Minimal
+Downtown Detroit (Core),Sports Bar,Mon,0.0,Minimal,11.4,Minimal,19.0,Minimal,5.2,Minimal
+Downtown Detroit (Core),Sports Bar,Tue,0.0,Minimal,11.5,Minimal,18.4,Minimal,4.9,Minimal
+Downtown Detroit (Core),Sports Bar,Wed,0.0,Minimal,13.1,Minimal,21.0,Light,5.6,Minimal
+Downtown Detroit (Core),Sports Bar,Thu,0.0,Minimal,14.9,Minimal,28.1,Light,8.8,Minimal
+Downtown Detroit (Core),Sports Bar,Fri,0.0,Minimal,20.7,Light,30.6,Light,22.3,Light
+Downtown Detroit (Core),Sports Bar,Sat,0.0,Minimal,27.9,Light,32.1,Light,21.8,Light
+Downtown Detroit (Core),Sports Bar,Sun,0.0,Minimal,19.8,Minimal,28.3,Light,7.8,Minimal
+Downtown Detroit (Core),Cocktail Lounge,Mon,0.0,Minimal,0.4,Minimal,2.8,Minimal,1.9,Minimal
+Downtown Detroit (Core),Cocktail Lounge,Tue,0.0,Minimal,0.7,Minimal,5.1,Minimal,3.6,Minimal
+Downtown Detroit (Core),Cocktail Lounge,Wed,0.0,Minimal,1.7,Minimal,12.1,Minimal,8.4,Minimal
+Downtown Detroit (Core),Cocktail Lounge,Thu,0.0,Minimal,4.7,Minimal,31.7,Light,25.0,Light
+Downtown Detroit (Core),Cocktail Lounge,Fri,0.0,Minimal,4.6,Minimal,46.5,Moderate,45.2,Moderate
+Downtown Detroit (Core),Cocktail Lounge,Sat,0.0,Minimal,4.6,Minimal,46.1,Moderate,44.7,Moderate
+Downtown Detroit (Core),Cocktail Lounge,Sun,0.0,Minimal,1.2,Minimal,8.4,Minimal,5.8,Minimal
+Woodward Core,Neighborhood / Casual Bar,Mon,0.0,Minimal,10.3,Minimal,18.6,Minimal,11.4,Minimal
+Woodward Core,Neighborhood / Casual Bar,Tue,0.0,Minimal,10.6,Minimal,19.0,Minimal,11.6,Minimal
+Woodward Core,Neighborhood / Casual Bar,Wed,0.0,Minimal,11.8,Minimal,21.2,Light,12.9,Minimal
+Woodward Core,Neighborhood / Casual Bar,Thu,0.0,Minimal,12.2,Minimal,23.2,Light,16.4,Minimal
+Woodward Core,Neighborhood / Casual Bar,Fri,0.0,Minimal,14.8,Minimal,32.8,Light,26.0,Light
+Woodward Core,Neighborhood / Casual Bar,Sat,0.0,Minimal,16.3,Minimal,36.3,Light,28.8,Light
+Woodward Core,Neighborhood / Casual Bar,Sun,0.0,Minimal,13.8,Minimal,23.7,Light,12.4,Minimal
+Greektown / Casino District,Neighborhood / Casual Bar,Mon,0.0,Minimal,6.4,Minimal,17.3,Minimal,18.2,Minimal
+Greektown / Casino District,Neighborhood / Casual Bar,Tue,0.0,Minimal,6.5,Minimal,17.6,Minimal,18.5,Minimal
+Greektown / Casino District,Neighborhood / Casual Bar,Wed,0.0,Minimal,7.3,Minimal,19.7,Minimal,20.8,Light
+Greektown / Casino District,Neighborhood / Casual Bar,Thu,0.0,Minimal,7.7,Minimal,22.0,Light,26.8,Light
+Greektown / Casino District,Neighborhood / Casual Bar,Fri,0.0,Minimal,9.4,Minimal,31.4,Light,42.9,Moderate
+Greektown / Casino District,Neighborhood / Casual Bar,Sat,0.0,Minimal,10.7,Minimal,35.9,Light,49.1,Moderate
+Greektown / Casino District,Neighborhood / Casual Bar,Sun,0.0,Minimal,9.0,Minimal,23.3,Light,21.0,Light
+Financial District,Neighborhood / Casual Bar,Mon,0.0,Minimal,7.6,Minimal,8.3,Minimal,1.2,Minimal
+Financial District,Neighborhood / Casual Bar,Tue,0.0,Minimal,7.8,Minimal,8.6,Minimal,1.3,Minimal
+Financial District,Neighborhood / Casual Bar,Wed,0.0,Minimal,8.8,Minimal,9.7,Minimal,1.4,Minimal
+Financial District,Neighborhood / Casual Bar,Thu,0.0,Minimal,8.9,Minimal,10.3,Minimal,1.7,Minimal
+Financial District,Neighborhood / Casual Bar,Fri,0.0,Minimal,10.3,Minimal,14.0,Minimal,2.6,Minimal
+Financial District,Neighborhood / Casual Bar,Sat,0.0,Minimal,11.8,Minimal,15.9,Minimal,3.0,Minimal
+Financial District,Neighborhood / Casual Bar,Sun,0.0,Minimal,10.2,Minimal,10.7,Minimal,1.3,Minimal
+Midtown,Neighborhood / Casual Bar,Mon,0.0,Minimal,7.0,Minimal,11.9,Minimal,7.0,Minimal
+Midtown,Neighborhood / Casual Bar,Tue,0.0,Minimal,7.1,Minimal,12.1,Minimal,7.1,Minimal
+Midtown,Neighborhood / Casual Bar,Wed,0.0,Minimal,8.0,Minimal,13.6,Minimal,8.0,Minimal
+Midtown,Neighborhood / Casual Bar,Thu,0.0,Minimal,8.3,Minimal,14.9,Minimal,10.1,Minimal
+Midtown,Neighborhood / Casual Bar,Fri,0.0,Minimal,9.9,Minimal,20.8,Light,15.8,Minimal
+Midtown,Neighborhood / Casual Bar,Sat,0.0,Minimal,11.2,Minimal,23.5,Light,18.0,Minimal
+Midtown,Neighborhood / Casual Bar,Sun,0.0,Minimal,9.5,Minimal,15.4,Minimal,7.8,Minimal
+Corktown,Neighborhood / Casual Bar,Mon,0.0,Minimal,5.0,Minimal,15.2,Minimal,12.2,Minimal
+Corktown,Neighborhood / Casual Bar,Tue,0.0,Minimal,5.1,Minimal,15.6,Minimal,12.5,Minimal
+Corktown,Neighborhood / Casual Bar,Wed,0.0,Minimal,5.7,Minimal,17.6,Minimal,14.1,Minimal
+Corktown,Neighborhood / Casual Bar,Thu,0.0,Minimal,6.1,Minimal,19.8,Minimal,18.4,Minimal
+Corktown,Neighborhood / Casual Bar,Fri,0.0,Minimal,7.5,Minimal,28.5,Light,29.5,Light
+Corktown,Neighborhood / Casual Bar,Sat,0.0,Minimal,8.6,Minimal,32.6,Light,33.9,Light
+Corktown,Neighborhood / Casual Bar,Sun,0.0,Minimal,7.4,Minimal,21.9,Light,15.0,Minimal
+Eastern Market,Neighborhood / Casual Bar,Mon,0.0,Minimal,7.3,Minimal,5.5,Minimal,2.4,Minimal
+Eastern Market,Neighborhood / Casual Bar,Tue,0.0,Minimal,7.4,Minimal,5.7,Minimal,2.4,Minimal
+Eastern Market,Neighborhood / Casual Bar,Wed,0.0,Minimal,8.3,Minimal,6.3,Minimal,2.7,Minimal
+Eastern Market,Neighborhood / Casual Bar,Thu,0.0,Minimal,8.8,Minimal,7.1,Minimal,3.5,Minimal
+Eastern Market,Neighborhood / Casual Bar,Fri,0.0,Minimal,10.9,Minimal,10.3,Minimal,5.7,Minimal
+Eastern Market,Neighborhood / Casual Bar,Sat,0.0,Minimal,13.9,Minimal,13.1,Minimal,7.3,Minimal
+Eastern Market,Neighborhood / Casual Bar,Sun,0.0,Minimal,11.8,Minimal,8.6,Minimal,3.1,Minimal
+New Center / North End,Neighborhood / Casual Bar,Mon,0.0,Minimal,6.0,Minimal,5.4,Minimal,1.8,Minimal
+New Center / North End,Neighborhood / Casual Bar,Tue,0.0,Minimal,6.2,Minimal,5.6,Minimal,1.9,Minimal
+New Center / North End,Neighborhood / Casual Bar,Wed,0.0,Minimal,6.9,Minimal,6.2,Minimal,2.1,Minimal
+New Center / North End,Neighborhood / Casual Bar,Thu,0.0,Minimal,6.9,Minimal,6.6,Minimal,2.5,Minimal
+New Center / North End,Neighborhood / Casual Bar,Fri,0.0,Minimal,8.2,Minimal,9.1,Minimal,3.9,Minimal
+New Center / North End,Neighborhood / Casual Bar,Sat,0.0,Minimal,8.1,Minimal,9.0,Minimal,3.9,Minimal
+New Center / North End,Neighborhood / Casual Bar,Sun,0.0,Minimal,6.7,Minimal,5.8,Minimal,1.7,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Mon,0.0,Minimal,7.9,Minimal,11.1,Minimal,5.5,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Tue,0.0,Minimal,8.0,Minimal,11.2,Minimal,5.6,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Wed,0.0,Minimal,9.0,Minimal,12.6,Minimal,6.3,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Thu,0.0,Minimal,9.5,Minimal,14.0,Minimal,8.1,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Fri,0.0,Minimal,11.9,Minimal,20.5,Light,13.3,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Sat,0.0,Minimal,13.9,Minimal,24.1,Light,15.6,Minimal
+Riverfront / RiverWalk,Neighborhood / Casual Bar,Sun,0.0,Minimal,12.9,Minimal,17.2,Minimal,7.4,Minimal
+Core City / Woodbridge,Neighborhood / Casual Bar,Mon,0.0,Minimal,3.8,Minimal,11.6,Minimal,9.1,Minimal
+Core City / Woodbridge,Neighborhood / Casual Bar,Tue,0.0,Minimal,3.9,Minimal,11.9,Minimal,9.3,Minimal
+Core City / Woodbridge,Neighborhood / Casual Bar,Wed,0.0,Minimal,4.4,Minimal,13.4,Minimal,10.4,Minimal
+Core City / Woodbridge,Neighborhood / Casual Bar,Thu,0.0,Minimal,4.6,Minimal,15.1,Minimal,13.6,Minimal
+Core City / Woodbridge,Neighborhood / Casual Bar,Fri,0.0,Minimal,5.8,Minimal,21.8,Light,22.1,Light
+Core City / Woodbridge,Neighborhood / Casual Bar,Sat,0.0,Minimal,6.8,Minimal,25.8,Light,26.1,Light
+Core City / Woodbridge,Neighborhood / Casual Bar,Sun,0.0,Minimal,5.7,Minimal,16.7,Minimal,11.2,Minimal
+Mexicantown,Neighborhood / Casual Bar,Mon,0.0,Minimal,5.9,Minimal,11.3,Minimal,5.4,Minimal
+Mexicantown,Neighborhood / Casual Bar,Tue,0.0,Minimal,5.9,Minimal,11.3,Minimal,5.4,Minimal
+Mexicantown,Neighborhood / Casual Bar,Wed,0.0,Minimal,6.6,Minimal,12.6,Minimal,6.0,Minimal
+Mexicantown,Neighborhood / Casual Bar,Thu,0.0,Minimal,6.9,Minimal,13.8,Minimal,7.6,Minimal
+Mexicantown,Neighborhood / Casual Bar,Fri,0.0,Minimal,8.4,Minimal,19.8,Minimal,12.2,Minimal
+Mexicantown,Neighborhood / Casual Bar,Sat,0.0,Minimal,9.7,Minimal,22.8,Light,14.0,Minimal
+Mexicantown,Neighborhood / Casual Bar,Sun,0.0,Minimal,8.8,Minimal,15.9,Minimal,6.5,Minimal
+Foxtown / Stadium District,Neighborhood / Casual Bar,Mon,0.0,Minimal,7.1,Minimal,18.0,Minimal,19.6,Minimal
+Foxtown / Stadium District,Neighborhood / Casual Bar,Tue,0.0,Minimal,7.2,Minimal,18.5,Minimal,20.1,Light
+Foxtown / Stadium District,Neighborhood / Casual Bar,Wed,0.0,Minimal,8.1,Minimal,20.6,Light,22.4,Light
+Foxtown / Stadium District,Neighborhood / Casual Bar,Thu,0.0,Minimal,8.4,Minimal,22.6,Light,28.4,Light
+Foxtown / Stadium District,Neighborhood / Casual Bar,Fri,0.0,Minimal,10.1,Minimal,31.9,Light,45.0,Moderate
+Foxtown / Stadium District,Neighborhood / Casual Bar,Sat,0.0,Minimal,11.2,Minimal,35.2,Light,49.7,Moderate
+Foxtown / Stadium District,Neighborhood / Casual Bar,Sun,0.0,Minimal,9.5,Minimal,23.1,Light,21.5,Light
+Southwest Detroit,Neighborhood / Casual Bar,Mon,0.0,Minimal,5.7,Minimal,10.8,Minimal,5.1,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Tue,0.0,Minimal,5.7,Minimal,10.8,Minimal,5.1,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Wed,0.0,Minimal,6.3,Minimal,12.0,Minimal,5.7,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Thu,0.0,Minimal,6.5,Minimal,13.1,Minimal,7.2,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Fri,0.0,Minimal,8.0,Minimal,18.8,Minimal,11.6,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Sat,0.0,Minimal,9.2,Minimal,21.7,Light,13.3,Minimal
+Southwest Detroit,Neighborhood / Casual Bar,Sun,0.0,Minimal,8.3,Minimal,15.1,Minimal,6.1,Minimal
+Downtown Detroit (Core),Neighborhood / Casual Bar,Mon,0.0,Minimal,8.7,Minimal,14.0,Minimal,8.7,Minimal
+Downtown Detroit (Core),Neighborhood / Casual Bar,Tue,0.0,Minimal,8.9,Minimal,14.3,Minimal,8.9,Minimal
+Downtown Detroit (Core),Neighborhood / Casual Bar,Wed,0.0,Minimal,9.9,Minimal,15.9,Minimal,9.9,Minimal
+Downtown Detroit (Core),Neighborhood / Casual Bar,Thu,0.0,Minimal,10.4,Minimal,17.5,Minimal,12.7,Minimal
+Downtown Detroit (Core),Neighborhood / Casual Bar,Fri,0.0,Minimal,12.5,Minimal,24.7,Light,20.0,Light
+Downtown Detroit (Core),Neighborhood / Casual Bar,Sat,0.0,Minimal,13.8,Minimal,27.3,Light,22.1,Light
+Downtown Detroit (Core),Neighborhood / Casual Bar,Sun,0.0,Minimal,11.7,Minimal,17.9,Minimal,9.6,Minimal

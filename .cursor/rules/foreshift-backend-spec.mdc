@@ -1,0 +1,39 @@
+---
+description: ForeShift backend service spec — formula, API contract, hard requirements
+alwaysApply: true
+---
+
+# ForeShift Backend Spec
+
+Read `cursor.md` for full context. Source: `ForeShift_Backend_Service_Spec.pdf`.
+
+## Non-negotiables
+
+- **Standalone REST API** — JSON in/out, curl-testable; never couple to Bubble internals.
+- **Owner-editable coefficients** — event affinity, event magnitude, weather affinity; no hardcode, no redeploy to change.
+- **Terminology:** "zone demand" only — never "restaurant demand".
+
+## Formula (§2)
+
+```
+final = MIN( (base_score + event_lift) * weather_factor , 150 )
+event_lift     = SUM( magnitude × concept_event_affinity × proximity ) per event
+weather_factor = 1 - (weather_severity × concept_weather_affinity)
+```
+
+Additive events, multiplicative weather, cap 150, re-band. Must pass worked example → **45.38 / Moderate** with dummy coeffs.
+
+## APIs
+
+- `POST /zone-demand` — pure math (spec §3): zone, concept, day, daypart, events[], weather_severity
+- `POST /ai/ask` — Phase 2 AI narration pipeline (implemented)
+
+## Coefficient tables (dummy until owner loads real)
+
+- Event affinity: all concepts **0.50**
+- Event magnitude: Major stadium game **50**, Concert **30**, Festival **20**, Minor **10**
+- Weather affinity: all concepts **0.35**
+
+## Bands
+
+Exceptional 110–150 | Peak 85–109 | High 65–84 | Moderate 40–64 | Light 20–39 | Minimal 0–19
