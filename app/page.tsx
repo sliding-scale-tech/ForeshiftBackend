@@ -138,6 +138,7 @@ function Section({ tab, data }: { tab: Tab; data: CoefficientData }) {
           title="Event magnitude"
           subtitle="Crowd weight per event class. A higher number means that class drives a bigger demand lift. 0 or greater."
         />
+        <FormulaPanel highlight="magnitude" />
         <div className="card">
           <table className="coef">
             <tbody>
@@ -161,6 +162,7 @@ function Section({ tab, data }: { tab: Tab; data: CoefficientData }) {
           title="Event affinity"
           subtitle="How strongly nearby events lift each concept. 0 ignores events, 1 is fully exposed to them."
         />
+        <FormulaPanel highlight="event_affinity" />
         <div className="card">
           <table className="coef">
             <tbody>
@@ -184,6 +186,7 @@ function Section({ tab, data }: { tab: Tab; data: CoefficientData }) {
         title="Weather affinity"
         subtitle="How strongly weather scales each concept's demand. 0 is weather-proof, 1 is fully weather-driven."
       />
+      <FormulaPanel highlight="weather_affinity" />
       <div className="card">
         <table className="coef">
           <tbody>
@@ -208,6 +211,53 @@ function PageHead({ title, subtitle }: { title: string; subtitle: string }) {
       <h1>{title}</h1>
       <p className="sub">{subtitle}</p>
     </header>
+  );
+}
+
+type FormulaHighlight = "magnitude" | "event_affinity" | "weather_affinity";
+
+const HIGHLIGHT_TERM: Record<FormulaHighlight, string> = {
+  magnitude: "event_magnitude",
+  event_affinity: "concept_event_affinity",
+  weather_affinity: "concept_weather_affinity",
+};
+
+function Term({ name, highlight }: { name: string; highlight: FormulaHighlight }) {
+  if (name === HIGHLIGHT_TERM[highlight]) {
+    return <span className="formula-hl">{name}</span>;
+  }
+  return <>{name}</>;
+}
+
+function FormulaPanel({ highlight }: { highlight: FormulaHighlight }) {
+  const editNote =
+    highlight === "magnitude"
+      ? "Values below set event_magnitude for each event class."
+      : highlight === "event_affinity"
+        ? "Values below set concept_event_affinity for each concept."
+        : "Values below set concept_weather_affinity for each concept.";
+
+  return (
+    <section className="formulacard" aria-label="Zone demand formula">
+      <div className="formulatitle">Zone demand formula</div>
+      <pre className="formulablock">
+        <code>
+          <span className="formula-comment"># Final zone-demand score</span>
+          {"\n"}
+          final = MIN( (base_score + event_lift) × weather_factor , 150 )
+          {"\n\n"}
+          <span className="formula-comment"># where</span>
+          {"\n"}
+          event_lift = SUM per event ({" "}
+          <Term name="event_magnitude" highlight={highlight} /> ×{" "}
+          <Term name="concept_event_affinity" highlight={highlight} /> × proximity )
+          {"\n"}
+          weather_factor = 1 − ( weather_severity ×{" "}
+          <Term name="concept_weather_affinity" highlight={highlight} /> )
+        </code>
+      </pre>
+      <p className="formulanote">{editNote} Changes apply on the next demand request.</p>
+    </section>
   );
 }
 

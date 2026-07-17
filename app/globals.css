@@ -160,6 +160,61 @@ body {
   line-height: 1.5;
 }
 
+/* ---- Formula reference ---- */
+.formulacard {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 20px 24px 18px;
+  margin-bottom: 20px;
+}
+.formulatitle {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b45309;
+  margin-bottom: 14px;
+}
+.formulablock {
+  margin: 0;
+  padding: 16px 18px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+.formulablock-secondary {
+  margin-top: 10px;
+}
+.formulablock code {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #92400e;
+  white-space: pre-wrap;
+}
+.formula-comment {
+  color: #b45309;
+  opacity: 0.75;
+}
+.formula-hl {
+  color: #c2410c;
+  font-weight: 650;
+  background: #ffedd5;
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.formulanote {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: #a16207;
+  line-height: 1.5;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);

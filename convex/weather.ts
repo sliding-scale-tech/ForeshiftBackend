@@ -2,9 +2,9 @@ import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { api } from "./_generated/api";
 import { type Doc } from "./_generated/dataModel";
-import { fetchWeatherForecast } from "./lib/weatherapi";
+import { fetchWeatherForecast, fetchWeatherHistory } from "./lib/weatherapi";
 import { severityFromForecast } from "./lib/weatherSeverity";
-import { dayFromLocalDate } from "./lib/vocab";
+import { dayFromLocalDate, daysUntilNextMonday, mondayOfWeek } from "./lib/vocab";
 import {
   listWeatherSignalIds,
   createWeatherSignal,
@@ -69,16 +69,39 @@ export const syncWeatherSignalsToBubble = internalAction({
       );
     }
 
-    const forecast = await fetchWeatherForecast({
-      apiKey,
-      query: args.query ?? "Detroit",
-      days: args.days ?? 7,
-    });
+    // Cap at the upcoming Monday (not a flat 7) — same reasoning as the event
+    // sync: a mid-week run must stay inside this week, never spill into next
+    // week's Mon/Tue/Wed and overwrite this week's day-slots with wrong dates.
+    const now = new Date();
+    const query = args.query ?? "Detroit";
+    const days = args.days ?? daysUntilNextMonday(now);
+    const forecast = await fetchWeatherForecast({ apiKey, query, days });
+
+    // Backfill days already elapsed this week (Monday..yesterday) with ACTUAL
+    // past weather — forecast.json only ever looks forward from today, so a
+    // mid-week or delayed sync would otherwise leave those day-slots with no
+    // weather signal at all even though the real data is available via history.
+    const weekStart = mondayOfWeek(now);
+    const todayStr = now.toISOString().slice(0, 10);
+    let history: Awaited<ReturnType<typeof fetchWeatherHistory>> = [];
+    if (weekStart < todayStr) {
+      const yesterday = new Date(now.getTime() - 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      history = await fetchWeatherHistory({
+        apiKey,
+        query,
+        startDate: weekStart,
+        endDate: yesterday,
+      });
+    }
+
+    const allDays = [...history, ...forecast];
     const zones: Doc<"zones">[] = await ctx.runQuery(api.zones.list, {});
 
-    // Fan out: one row per (zone × forecast day), same severity across zones.
+    // Fan out: one row per (zone × day), same severity across zones.
     const rows: BubbleWeatherSignal[] = [];
-    for (const f of forecast) {
+    for (const f of allDays) {
       const severity = severityFromForecast(f);
       const day = dayFromLocalDate(f.date);
       const precip_chance = Math.max(f.chanceOfRain, f.chanceOfSnow);
@@ -124,7 +147,9 @@ export const syncWeatherSignalsToBubble = internalAction({
     }
 
     return {
-      days: forecast.length,
+      days: allDays.length,
+      historyDays: history.length,
+      forecastDays: forecast.length,
       zones: zones.length,
       rows: rows.length,
       bubble: { created, updated, deleted, existingBefore: existing.size },

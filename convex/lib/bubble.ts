@@ -72,6 +72,24 @@ function toStr(v: unknown): string {
   return "";
 }
 
+// Bubble `date` fields must be sent as a value Date.parse() can read unambiguously.
+// A bare "YYYY-MM-DD" string was fine while these fields were `text`, but now that
+// they're real `date` fields, sending it un-anchored risks Bubble parsing it in the
+// app's local timezone instead of UTC — shifting the stored day by one and breaking
+// "is on date" filters. Anchor explicitly to UTC midnight.
+function toBubbleDate(localDate: string): string {
+  return `${localDate}T00:00:00.000Z`;
+}
+
+// Inverse: normalize whatever Bubble's Data API echoes back for a `date` field
+// (ISO string or ms timestamp) to the "YYYY-MM-DD" shape the rest of the code uses.
+function fromBubbleDate(v: unknown): string {
+  if (v === null || v === undefined || v === "") return "";
+  const d = new Date(v as string | number);
+  if (Number.isNaN(d.getTime())) return toStr(v);
+  return d.toISOString().slice(0, 10);
+}
+
 function normalize(row: Record<string, unknown>): DemandRecord {
   const dayparts: DaypartCell[] = DAYPARTS.map((dp) => {
     const f = WIDE_FIELDS[dp];
@@ -122,7 +140,7 @@ function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
     event_class: s.event_class,
     zone: s.zone,
     proximity: s.proximity,
-    date: s.date,
+    date: toBubbleDate(s.date),
   };
   if (s.day) body.day = s.day;
   if (s.daypart) body.daypart = s.daypart;
@@ -233,7 +251,7 @@ function weatherSignalBody(s: BubbleWeatherSignal): Record<string, unknown> {
   const body: Record<string, unknown> = {
     signal_key: s.signal_key,
     zone: s.zone,
-    date: s.date,
+    date: toBubbleDate(s.date),
     severity: s.severity,
     condition: s.condition,
     precip_chance: s.precip_chance,
@@ -424,7 +442,7 @@ export async function fetchWeatherSignals(args: {
   return rows.map((r) => ({
     zone: toStr(r["zone"]),
     day: toStr(r["day"]),
-    date: toStr(r["date"]),
+    date: fromBubbleDate(r["date"]),
     severity: toNumber(r["severity"]),
     condition: toStr(r["condition"]),
     temp_f: toNumber(r["temp_f"]),
@@ -521,7 +539,12 @@ export interface BubbleResolvedDemand {
 }
 
 function resolvedDemandBody(s: BubbleResolvedDemand): Record<string, unknown> {
-  return { ...s };
+  const { date, ...rest } = s;
+  const body: Record<string, unknown> = { ...rest };
+  // date can be "" when no matching WeatherSignal row was found for this zone/day
+  // (shouldn't happen post-sync); omit rather than send an invalid date value.
+  if (date) body.date = toBubbleDate(date);
+  return body;
 }
 
 /** List existing ResolvedDemand rows -> Map of signal_key -> Bubble _id (paginated). */
