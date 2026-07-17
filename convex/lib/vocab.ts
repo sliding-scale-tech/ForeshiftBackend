@@ -86,6 +86,39 @@ export function dayFromLocalDate(localDate: string): Day | null {
   return DAYS[(d.getUTCDay() + 6) % 7]; // getUTCDay: 0=Sun -> shift so Mon=0
 }
 
+// Calendar date (YYYY-MM-DD) of the Monday that starts the UTC week containing
+// `now`. Anchor point for the weekly sync so it always targets one coherent
+// Monday..Sunday week, never a rolling window that can straddle two weeks.
+export function mondayOfWeek(now: Date): string {
+  const sinceMonday = (now.getUTCDay() + 6) % 7; // 0 if `now` is already Monday
+  const monday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - sinceMonday),
+  );
+  return monday.toISOString().slice(0, 10);
+}
+
+// The 7 calendar dates (YYYY-MM-DD) for Mon..Sun of the week containing `now`,
+// keyed by day name. Lets a day-of-week row (e.g. ResolvedDemand's "Mon") always
+// carry the correct date for THIS week, independent of whether a live signal
+// (event/weather) happens to exist for that day.
+export function currentWeekDates(now: Date): Record<Day, string> {
+  const monday = new Date(`${mondayOfWeek(now)}T00:00:00Z`);
+  const out = {} as Record<Day, string>;
+  DAYS.forEach((day, i) => {
+    out[day] = new Date(monday.getTime() + i * 86_400_000).toISOString().slice(0, 10);
+  });
+  return out;
+}
+
+// Days remaining from `now` through the upcoming Monday (inclusive of today,
+// exclusive of that Monday) — caps a sync's fetch window so it never reaches
+// into next week's Mon/Tue/Wed. On a run that starts exactly on Monday this is
+// 7 (the full week); on a mid-week run it's whatever's left of the current week.
+export function daysUntilNextMonday(now: Date): number {
+  const sinceMonday = (now.getUTCDay() + 6) % 7;
+  return 7 - sinceMonday;
+}
+
 // Map a Ticketmaster localTime ("HH:MM:SS") to a daypart, using the windows in
 // DAYPART_WINDOWS. Returns null for closed hours (02:00–06:00) or missing time.
 export function daypartFromLocalTime(localTime: string | null): Daypart | null {

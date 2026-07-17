@@ -7,6 +7,7 @@
 // Docs basis: v8 §10.2 "forecast for relevant dates, Detroit"; v7.1 §4 weekly weather.
 
 const FORECAST_URL = "https://api.weatherapi.com/v1/forecast.json";
+const HISTORY_URL = "https://api.weatherapi.com/v1/history.json";
 
 /** One day of forecast, reduced to what the severity rule reads. */
 export interface DailyForecast {
@@ -62,8 +63,38 @@ export async function fetchWeatherForecast(args: {
     throw new Error(`WeatherAPI ${res.status}: ${body.slice(0, 300)}`);
   }
   const data = (await res.json()) as WaResponse;
-  const days = data.forecast?.forecastday ?? [];
+  return normalizeForecastDays(data.forecast?.forecastday ?? []);
+}
 
+/**
+ * Fetch ACTUAL past weather for `query` over [startDate, endDate] (inclusive,
+ * "YYYY-MM-DD"). Used to backfill days within the current week that have
+ * already elapsed — forecast.json only ever looks forward from today, so a
+ * mid-week (or delayed) sync needs this to fill in Monday..yesterday.
+ */
+export async function fetchWeatherHistory(args: {
+  apiKey: string;
+  query: string;
+  startDate: string;
+  endDate: string;
+}): Promise<DailyForecast[]> {
+  const params = new URLSearchParams({
+    key: args.apiKey,
+    q: args.query,
+    dt: args.startDate,
+    end_dt: args.endDate,
+  });
+
+  const res = await fetch(`${HISTORY_URL}?${params.toString()}`);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`WeatherAPI history ${res.status}: ${body.slice(0, 300)}`);
+  }
+  const data = (await res.json()) as WaResponse;
+  return normalizeForecastDays(data.forecast?.forecastday ?? []);
+}
+
+function normalizeForecastDays(days: WaForecastDay[]): DailyForecast[] {
   return days.map((fd) => {
     const d = fd.day ?? {};
     return {

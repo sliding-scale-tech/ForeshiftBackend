@@ -8,7 +8,11 @@ import {
 } from "./lib/ticketmaster";
 import { computeSearchArea, haversineMiles, proximityTier, PROXIMITY_FAR_MILES } from "./lib/geo";
 import { classifyEvent } from "./lib/classify";
-import { dayFromLocalDate, daypartFromLocalTime } from "./lib/vocab";
+import {
+  dayFromLocalDate,
+  daypartFromLocalTime,
+  daysUntilNextMonday,
+} from "./lib/vocab";
 import {
   listEventSignalIds,
   createEventSignal,
@@ -238,7 +242,12 @@ export const assignEventsToZones = internalAction({
 export const syncEventSignalsToBubble = internalAction({
   args: { days: v.optional(v.number()), deleteStale: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
-    const { summary, rows } = await computeEventSignalRows(ctx, args.days ?? 7);
+    // Cap at the upcoming Monday (not a flat 7) so this always targets one
+    // coherent Mon..Sun week — a mid-week run (delayed cron, manual re-sync)
+    // must not bleed into next week's Mon/Tue/Wed and overwrite this week's
+    // day-slots with next week's dates.
+    const days = args.days ?? daysUntilNextMonday(new Date());
+    const { summary, rows } = await computeEventSignalRows(ctx, days);
     const existing = await listEventSignalIds();
 
     let created = 0;

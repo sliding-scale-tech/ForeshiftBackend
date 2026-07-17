@@ -43,6 +43,7 @@ import {
   DAYPARTS,
   DAYPART_WINDOWS,
   keepKnown,
+  currentWeekDates,
   type Daypart,
   type Band,
 } from "./lib/vocab";
@@ -186,6 +187,12 @@ export const syncResolvedDemandToBubble = internalAction({
 
     const eventsByCell = indexEventsByCell(events);
     const weatherByZoneDay = indexWeatherByZoneDay(weather);
+    // Derive each day-of-week's calendar date from THIS week's Monday directly,
+    // rather than borrowing it from whatever WeatherSignal row happens to exist —
+    // that lookup goes stale/wrong for a day with no live signal yet (e.g. an
+    // already-elapsed day this week that a forward-looking forecast API can't
+    // backfill), and previously showed next week's date instead of this week's.
+    const weekDates = currentWeekDates(new Date());
 
     const rows: BubbleResolvedDemand[] = records.map((r) => {
       const { dayparts, peak } = resolveDay({
@@ -198,14 +205,13 @@ export const syncResolvedDemandToBubble = internalAction({
         coeffs,
       });
       const byDp = new Map(dayparts.map((d) => [d.daypart, d]));
-      const w = weatherByZoneDay.get(`${r.zone}|${r.day}`);
 
       return {
         signal_key: `${r.zone}__${r.concept}__${r.day}`,
         zone: r.zone,
         concept: r.concept,
         day: r.day,
-        date: w?.date ?? "",
+        date: weekDates[r.day as (typeof DAYS)[number]] ?? "",
         peak_daypart: peak.daypart,
         peak_score: peak.score,
         peak_band: peak.band,
