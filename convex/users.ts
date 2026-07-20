@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { internalMutation, query, type QueryCtx } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  query,
+  type QueryCtx,
+} from "./_generated/server";
 
 // Users are synced FROM Clerk (Clerk is the source of truth). The webhook in
 // http.ts calls upsertFromClerk / deleteFromClerk; the app reads `me`; and
@@ -22,6 +27,19 @@ export async function requireAdmin(ctx: QueryCtx) {
   }
   return user;
 }
+
+// requireAdmin needs `ctx.db`, which actions don't have. Actions that must be
+// admin-gated (e.g. a "push to Bubble now" button) call this via ctx.runQuery
+// instead — the auth identity carries over from the calling action. Returns
+// the admin's identity (not just a pass/throw) so the caller can attribute
+// the action to them, e.g. in a sync log.
+export const requireAdminCheck = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireAdmin(ctx);
+    return { email: user.email, username: user.username };
+  },
+});
 
 /** The current signed-in user's role for the UI (null when signed out). */
 export const me = query({

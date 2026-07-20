@@ -155,6 +155,8 @@ export interface EventSignalRow {
   magnitude: number; // for inspection only; NOT stored (resolved at compute time)
   zone: string;
   proximity: number; // 1.0 or 0.5 (0 rows are dropped)
+  distanceMiles: number; // raw venue -> zone-centroid distance (event narration)
+  time: string | null; // localTime "HH:MM:SS", if Ticketmaster provided one
   date: string; // localDate "YYYY-MM-DD"
   day: string | null; // Mon..Sun
   daypart: string | null; // morning|midday|dinner|late
@@ -207,6 +209,8 @@ async function computeEventSignalRows(
         magnitude: ev.magnitude,
         zone: zone.name,
         proximity,
+        distanceMiles: Math.round(dist * 10) / 10,
+        time: ev.localTime,
         date: ev.localDate,
         day: dayFromLocalDate(ev.localDate),
         daypart: daypartFromLocalTime(ev.localTime),
@@ -264,6 +268,8 @@ export const syncEventSignalsToBubble = internalAction({
         event_class: row.eventClass,
         zone: row.zone,
         proximity: row.proximity,
+        distance_miles: row.distanceMiles,
+        event_time: row.time,
         date: row.date,
         day: row.day,
         daypart: row.daypart,

@@ -158,6 +158,57 @@ http.route({
   }),
 });
 
+// POST /demand/outlook — "Today's Demand Outlook" / "This Week's Demand
+// Outlook" / "Event Demand Impact" / "Weather Demand Impact" cards. Body:
+// { zone, concept, type? }. type is "today" (default), "weekly", "events",
+// or "weather". "events"/"weather" are always scoped to today and isolate
+// one driver each (no cross-mention of the other factor) with no percentages
+// — narration text only, per product decision. See lib/outlook.ts for the
+// full response shape of each type.
+http.route({
+  path: "/demand/outlook",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const secret = process.env.FORESHIFT_SHARED_SECRET;
+    if (secret && req.headers.get("x-foreshift-secret") !== secret) {
+      return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    let body: { zone?: unknown; concept?: unknown; type?: unknown };
+    try {
+      body = (await req.json()) as typeof body;
+    } catch {
+      return Response.json({ ok: false, error: "Body must be JSON." }, { status: 400 });
+    }
+
+    const zone = typeof body.zone === "string" ? body.zone : "";
+    const concept = typeof body.concept === "string" ? body.concept : "";
+    if (!zone || !concept) {
+      return Response.json(
+        { ok: false, error: "Missing zone or concept." },
+        { status: 400 },
+      );
+    }
+    const type =
+      body.type === "weekly" || body.type === "events" || body.type === "weather"
+        ? body.type
+        : "today";
+
+    try {
+      const result = await ctx.runAction(internal.outlook.getOutlook, {
+        zone,
+        concept,
+        type,
+      });
+      return Response.json(result, { status: 200 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[/demand/outlook] pipeline error:", message);
+      return Response.json({ ok: false, error: message }, { status: 400 });
+    }
+  }),
+});
+
 http.route({
   path: "/ai/ask",
   method: "POST",

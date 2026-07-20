@@ -124,6 +124,8 @@ export interface BubbleEventSignal {
   event_class: string;
   zone: string; // option-set value — must match Bubble's Zone options exactly
   proximity: number;
+  distance_miles: number | null; // raw venue -> zone-centroid distance (event/weather narration)
+  event_time: string | null; // "HH:MM:SS" local start time, if Ticketmaster provided one
   date: string; // "YYYY-MM-DD"
   day: string | null; // option-set value (Mon..Sun) — omitted if null
   daypart: string | null; // option-set value (morning..late) — omitted if null
@@ -140,6 +142,8 @@ function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
     event_class: s.event_class,
     zone: s.zone,
     proximity: s.proximity,
+    distance_miles: s.distance_miles ?? 0,
+    event_time: s.event_time ?? "",
     date: toBubbleDate(s.date),
   };
   if (s.day) body.day = s.day;
@@ -389,6 +393,8 @@ export interface EventSignalRead {
   daypart: string;
   event_class: string;
   proximity: number;
+  distance_miles: number;
+  event_time: string | null; // "HH:MM:SS", null if Ticketmaster gave no time
   name: string;
   venue_name: string;
 }
@@ -409,6 +415,8 @@ export async function fetchEventSignals(args: {
     daypart: toStr(r["daypart"]),
     event_class: toStr(r["event_class"]),
     proximity: toNumber(r["proximity"]),
+    distance_miles: toNumber(r["distance_miles"]),
+    event_time: toStr(r["event_time"]) || null,
     name: toStr(r["name"]),
     venue_name: toStr(r["venue_name"]),
   }));
@@ -579,9 +587,35 @@ export async function listResolvedDemandIds(): Promise<Map<string, string>> {
   return map;
 }
 
+// ResolvedDemand rows are now written with bounded concurrency (see
+// runWithConcurrency in operatorWeek.ts) instead of one-at-a-time, which makes
+// hitting Bubble's rate/capacity limits far more likely than under a strictly
+// sequential loop. Bubble signals overload two ways: 429 (rate limit, usually
+// with a Retry-After header) and 503 "app too busy" (transient capacity, no
+// header) — retry both with backoff so a burst of concurrent writes degrades
+// to "a bit slower" instead of a hard failure.
+const RETRYABLE_STATUS = new Set([429, 503]);
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  maxRetries = 5,
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, init);
+    if (!RETRYABLE_STATUS.has(res.status) || attempt >= maxRetries) return res;
+    const retryAfterSec = Number(res.headers.get("Retry-After"));
+    const delayMs =
+      Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? retryAfterSec * 1000
+        : 400 * 2 ** attempt;
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+}
+
 export async function createResolvedDemand(s: BubbleResolvedDemand): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${RESOLVED_DEMAND_TABLE}`, {
+  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -601,7 +635,7 @@ export async function updateResolvedDemand(
   s: BubbleResolvedDemand,
 ): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
+  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -618,7 +652,7 @@ export async function updateResolvedDemand(
 
 export async function deleteResolvedDemand(bubbleId: string): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
+  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });

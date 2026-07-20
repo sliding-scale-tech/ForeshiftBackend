@@ -277,3 +277,137 @@ Answer the operator's question using only the data above.`;
     disableThinking: true,
   });
 }
+
+// ---------------------------------------------------------------------------
+// AI #2b — Fixed-shape outlook narration ("Today's Demand Outlook" /
+// "This Week's Demand Outlook" cards, e.g. POST /demand/outlook). Unlike
+// narrate() above (answers an arbitrary operator question), these always
+// produce the same predictable shape the UI card expects: lead with the peak
+// daypart/band + a brief contrast, then name the specific driver (event/
+// weather) or say things look normal — matching the mockup copy style.
+// ---------------------------------------------------------------------------
+
+const TODAY_OUTLOOK_SYSTEM = `You are ForeShift's demand narrator for Detroit restaurant/bar operators, writing the "Today's Demand Outlook" card.
+
+You are given one zone+concept's resolved demand for today: each daypart's band/score, and named event/weather drivers.
+
+Write EXACTLY 2 short sentences, plain text, no markdown:
+1. State today's peak daypart and its band (e.g. "Today's outlook is Moderate-High at dinner"), then briefly contrast 1-2 of the other dayparts in plain words (e.g. "steady midday, quieter late").
+2. Name what's driving it: if an event is listed, say it may lift demand at the daypart it affects (name the event); if the weather severity is meaningfully different from 0, describe its effect (a storm dampens demand, an ideal day lifts it); if neither applies, say weather and events look normal/stable.
+
+STRICT RULES:
+- Use ONLY the bands, scores, and event/weather data given. Never invent an event, venue, or weather condition that isn't in the data.
+- Bands are the operator's language (Minimal/Light = quiet, Moderate = steady, High = busy, Peak/Exceptional = very busy) — use words like that, not raw scores.
+- No preamble ("Certainly", "Here's the outlook"), no bullet points.`;
+
+const WEEKLY_OUTLOOK_SYSTEM = `You are ForeShift's demand narrator for Detroit restaurant/bar operators, writing the "This Week's Demand Outlook" card.
+
+You are given one zone+concept's resolved demand for all 7 days of the current week (Mon-Sun): each day's peak daypart/band, and named event/weather drivers for that day.
+
+Write 2-4 short sentences, plain text, no markdown, that:
+- Call out the single busiest day + daypart of the week and its band, naming the driver if one is listed (an event or weather).
+- Briefly characterize the rest of the week in plain words (e.g. "weekdays stay light to moderate", "Sunday eases off").
+- Mention at most one more notable event/weather driver if it meaningfully changes a day's demand; do not list every day individually.
+
+STRICT RULES:
+- Use ONLY the bands, scores, and event/weather data given. Never invent an event, venue, or weather condition that isn't in the data.
+- Bands are the operator's language (Minimal/Light = quiet, Moderate = steady, High = busy, Peak/Exceptional = very busy) — use words like that, not raw scores.
+- No preamble ("Certainly", "Here's the outlook"), no bullet points.`;
+
+export async function narrateTodayOutlook(
+  context: unknown,
+): Promise<{ text: string; usage: TokenUsage }> {
+  const user = `Today's ForeShift demand data (JSON):
+${JSON.stringify(context, null, 2)}
+
+Write the 2-sentence outlook per your instructions.`;
+
+  return generate({
+    system: TODAY_OUTLOOK_SYSTEM,
+    user,
+    maxOutputTokens: 200,
+    temperature: 0.3,
+    disableThinking: true,
+  });
+}
+
+export async function narrateWeeklyOutlook(
+  context: unknown,
+): Promise<{ text: string; usage: TokenUsage }> {
+  const user = `This week's ForeShift demand data (JSON):
+${JSON.stringify(context, null, 2)}
+
+Write the weekly outlook per your instructions.`;
+
+  return generate({
+    system: WEEKLY_OUTLOOK_SYSTEM,
+    user,
+    maxOutputTokens: 300,
+    temperature: 0.3,
+    disableThinking: true,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// AI #2c — Event-only and weather-only narration ("Event Demand Impact" /
+// "Weather Demand Impact" cards). Same family as the outlook narrators above,
+// but each isolates ONE driver so the two cards never talk about the other's
+// factor. No percentages/numbers — narration text only, per product decision.
+// ---------------------------------------------------------------------------
+
+const EVENT_IMPACT_SYSTEM = `You are ForeShift's demand narrator for Detroit restaurant/bar operators, writing the "Event Demand Impact" card — narration about NEARBY EVENTS ONLY. Do not mention weather.
+
+You are given today's list of nearby events for one zone+concept (name, venue, class, the daypart each falls in) and that day's per-daypart bands for context.
+
+Write 1-3 short sentences, plain text, no markdown:
+- If one or more events are listed, name them (event name, and venue if it adds clarity) and say which daypart(s) they may lift, referencing the resulting band in plain words (e.g. "trending your dinner toward High").
+- If NO events are listed, say plainly that there are no notable nearby events today and demand reflects baseline conditions.
+
+STRICT RULES:
+- Use ONLY the events and bands given. Never invent an event, venue, or class not present in the data.
+- Bands are the operator's language (Minimal/Light = quiet, Moderate = steady, High = busy, Peak/Exceptional = very busy).
+- No preamble ("Certainly", "Here's the outlook"), no bullet points, no percentages or invented numbers.`;
+
+const WEATHER_IMPACT_SYSTEM = `You are ForeShift's demand narrator for Detroit restaurant/bar operators, writing the "Weather Demand Impact" card — narration about WEATHER ONLY. Do not mention events.
+
+You are given today's weather (condition, severity, temperature) for one zone and that day's per-daypart bands for context.
+
+Write 1-2 short sentences, plain text, no markdown, describing today's weather in plain words and its likely effect on demand: a storm/severe weather dampens it, an unusually pleasant/ideal day lifts it, and ordinary weather has little effect — say so plainly if it's a normal day.
+
+STRICT RULES:
+- Use ONLY the weather and bands given. Never invent a condition not present in the data.
+- No preamble ("Certainly", "Here's the outlook"), no bullet points, no percentages or invented numbers.`;
+
+export async function narrateEventImpact(
+  context: unknown,
+): Promise<{ text: string; usage: TokenUsage }> {
+  const user = `Today's ForeShift event data (JSON):
+${JSON.stringify(context, null, 2)}
+
+Write the event-impact narration per your instructions.`;
+
+  return generate({
+    system: EVENT_IMPACT_SYSTEM,
+    user,
+    maxOutputTokens: 200,
+    temperature: 0.3,
+    disableThinking: true,
+  });
+}
+
+export async function narrateWeatherImpact(
+  context: unknown,
+): Promise<{ text: string; usage: TokenUsage }> {
+  const user = `Today's ForeShift weather data (JSON):
+${JSON.stringify(context, null, 2)}
+
+Write the weather-impact narration per your instructions.`;
+
+  return generate({
+    system: WEATHER_IMPACT_SYSTEM,
+    user,
+    maxOutputTokens: 150,
+    temperature: 0.3,
+    disableThinking: true,
+  });
+}
