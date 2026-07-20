@@ -51,6 +51,23 @@ export default defineSchema(
       username: v.optional(v.string()),
       role: v.union(v.literal("admin"), v.literal("user")),
     }).index("by_clerkId", ["clerkId"]),
+
+    // One row per ResolvedDemand sync run (cron or the admin "Save to Bubble"
+    // button) — lets the admin panel show "when was this last pushed" even
+    // across page reloads / a closed-then-reopened tab, since it reads from
+    // this table instead of in-memory client state.
+    bubbleSyncLog: defineTable({
+      trigger: v.union(v.literal("admin"), v.literal("cron")),
+      triggeredBy: v.optional(v.string()), // admin email/username; unset for cron
+      startedAt: v.number(),
+      finishedAt: v.number(),
+      status: v.union(v.literal("success"), v.literal("error")),
+      total: v.number(),
+      created: v.number(),
+      updated: v.number(),
+      deleted: v.number(),
+      error: v.optional(v.string()),
+    }).index("by_trigger_and_finishedAt", ["trigger", "finishedAt"]),
   },
   { schemaValidation: true }
 );

@@ -26,7 +26,14 @@ export interface ResolvedCell {
   weather_factor: number;
   // Named factors so callers (AI narration, operator dashboard) can attribute
   // the specific driver instead of a generic "an event happened".
-  events: { name: string; venue: string; class: string; proximity: number }[];
+  events: {
+    name: string;
+    venue: string;
+    class: string;
+    proximity: number;
+    distance_miles: number;
+    time: string | null;
+  }[];
   weather: { condition: string; severity: number; temp_f: number } | null;
 }
 
@@ -116,6 +123,8 @@ export function resolveCell(args: {
       venue: e.venue_name,
       class: e.event_class,
       proximity: e.proximity,
+      distance_miles: e.distance_miles,
+      time: e.event_time,
     })),
     weather: weather
       ? {
