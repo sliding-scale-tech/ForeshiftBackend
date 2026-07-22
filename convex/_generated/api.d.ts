@@ -22,6 +22,7 @@ import type * as lib_gemini from "../lib/gemini.js";
 import type * as lib_geo from "../lib/geo.js";
 import type * as lib_orchestrator from "../lib/orchestrator.js";
 import type * as lib_outlook from "../lib/outlook.js";
+import type * as lib_pointInPolygon from "../lib/pointInPolygon.js";
 import type * as lib_providers from "../lib/providers.js";
 import type * as lib_resolve from "../lib/resolve.js";
 import type * as lib_svix from "../lib/svix.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "lib/geo": typeof lib_geo;
   "lib/orchestrator": typeof lib_orchestrator;
   "lib/outlook": typeof lib_outlook;
+  "lib/pointInPolygon": typeof lib_pointInPolygon;
   "lib/providers": typeof lib_providers;
   "lib/resolve": typeof lib_resolve;
   "lib/svix": typeof lib_svix;

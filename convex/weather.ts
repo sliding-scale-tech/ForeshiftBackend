@@ -1,17 +1,49 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { api } from "./_generated/api";
-import { type Doc } from "./_generated/dataModel";
-import { fetchWeatherForecast, fetchWeatherHistory } from "./lib/weatherapi";
-import { severityFromForecast } from "./lib/weatherSeverity";
-import { dayFromLocalDate, daysUntilNextMonday, mondayOfWeek } from "./lib/vocab";
+import {
+  fetchWeatherForecast,
+  fetchWeatherHistory,
+  sliceDaypartWeather,
+  type DailyForecast,
+  type DaypartWeather,
+} from "./lib/weatherapi";
+import { severityFromForecast, simplifyWeatherCondition } from "./lib/weatherSeverity";
+import { dayFromLocalDate, daysUntilNextMonday, mondayOfWeek, DAYPARTS } from "./lib/vocab";
 import {
   listWeatherSignalIds,
   createWeatherSignal,
   updateWeatherSignal,
   deleteWeatherSignal,
   type BubbleWeatherSignal,
+  type DaypartWeatherFields,
 } from "./lib/bubble";
+
+// Reduce one daypart's sliced weather to the {severity, condition, temp_f,
+// precip_chance} shape stored on the Bubble row — same severity RULE as the
+// whole-day aggregate (severityFromForecast), just fed a daypart's hourly
+// slice instead of the day's own aggregate.
+function daypartRow(dw: DaypartWeather): DaypartWeatherFields {
+  return {
+    severity: severityFromForecast(dw),
+    // condition is a Bubble option set (7 fixed values) — the raw WeatherAPI
+    // text ("Patchy rain nearby") isn't one of them and would be rejected.
+    condition: simplifyWeatherCondition(dw.conditionText),
+    temp_f: dw.avgTempF,
+    precip_chance: Math.max(dw.chanceOfRain, dw.chanceOfSnow),
+  };
+}
+
+function daypartRowsForDay(
+  f: DailyForecast,
+): Record<(typeof DAYPARTS)[number], DaypartWeatherFields> {
+  return {
+    morning: daypartRow(sliceDaypartWeather(f, "morning")),
+    midday: daypartRow(sliceDaypartWeather(f, "midday")),
+    dinner: daypartRow(sliceDaypartWeather(f, "dinner")),
+    late: daypartRow(sliceDaypartWeather(f, "late")),
+  };
+}
 
 // Step 3a/3b (debug): fetch the Detroit 7-day forecast and attach the v7.1 severity
 // to each day. Inspection only — no per-zone fan-out, no storage (that's 3c).
@@ -97,14 +129,20 @@ export const syncWeatherSignalsToBubble = internalAction({
     }
 
     const allDays = [...history, ...forecast];
-    const zones: Doc<"zones">[] = await ctx.runQuery(api.zones.list, {});
+    const zones: { name: string }[] = await ctx.runQuery(api.zones.list, {});
 
-    // Fan out: one row per (zone × day), same severity across zones.
+    // Fan out: one row per (zone × day) — STILL one row per zone/day, not
+    // per zone/day/daypart (wide format, matching ResolvedDemand's own
+    // morning/midday/dinner/late-as-columns convention) — same severity
+    // across zones, but now the row also carries a per-daypart breakdown
+    // alongside the existing whole-day aggregate fields (unchanged, kept for
+    // back-compat with anything already reading them).
     const rows: BubbleWeatherSignal[] = [];
     for (const f of allDays) {
       const severity = severityFromForecast(f);
       const day = dayFromLocalDate(f.date);
       const precip_chance = Math.max(f.chanceOfRain, f.chanceOfSnow);
+      const daypartRows = daypartRowsForDay(f);
       for (const zone of zones) {
         rows.push({
           signal_key: `${zone.name}__${f.date}`,
@@ -112,9 +150,13 @@ export const syncWeatherSignalsToBubble = internalAction({
           date: f.date,
           day,
           severity,
-          condition: f.conditionText,
+          condition: simplifyWeatherCondition(f.conditionText),
           precip_chance,
           temp_f: f.avgTempF,
+          morning: daypartRows.morning,
+          midday: daypartRows.midday,
+          dinner: daypartRows.dinner,
+          late: daypartRows.late,
         });
       }
     }
