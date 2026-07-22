@@ -240,15 +240,30 @@ export async function deleteEventSignal(bubbleId: string): Promise<void> {
 
 const WEATHER_SIGNAL_TABLE = "WeatherSignal";
 
+// One daypart's slice of a day's weather — same 4 fields repeated for each
+// of morning/midday/dinner/late, prefixed on the Bubble row (wide format:
+// still one row per zone×date, NOT one row per zone×date×daypart — see
+// CLAUDE.md-adjacent design note in weather.ts for why).
+export interface DaypartWeatherFields {
+  severity: number;
+  condition: string;
+  temp_f: number;
+  precip_chance: number;
+}
+
 export interface BubbleWeatherSignal {
   signal_key: string; // `${zone}__${date}` — unique upsert key
   zone: string;
   date: string; // "YYYY-MM-DD"
   day: string | null; // option-set value (Mon..Sun) — omitted if null
-  severity: number; // 0 / 0.25 / 0.5 / -0.10
+  severity: number; // whole-day aggregate — 0 / 0.25 / 0.5 / -0.10 (kept for back-compat)
   condition: string; // e.g. "Sunny"
   precip_chance: number; // %
   temp_f: number;
+  morning: DaypartWeatherFields;
+  midday: DaypartWeatherFields;
+  dinner: DaypartWeatherFields;
+  late: DaypartWeatherFields;
 }
 
 function weatherSignalBody(s: BubbleWeatherSignal): Record<string, unknown> {
@@ -260,6 +275,22 @@ function weatherSignalBody(s: BubbleWeatherSignal): Record<string, unknown> {
     condition: s.condition,
     precip_chance: s.precip_chance,
     temp_f: s.temp_f,
+    morning_severity: s.morning.severity,
+    morning_condition: s.morning.condition,
+    morning_temp_f: s.morning.temp_f,
+    morning_precip_chance: s.morning.precip_chance,
+    midday_severity: s.midday.severity,
+    midday_condition: s.midday.condition,
+    midday_temp_f: s.midday.temp_f,
+    midday_precip_chance: s.midday.precip_chance,
+    dinner_severity: s.dinner.severity,
+    dinner_condition: s.dinner.condition,
+    dinner_temp_f: s.dinner.temp_f,
+    dinner_precip_chance: s.dinner.precip_chance,
+    late_severity: s.late.severity,
+    late_condition: s.late.condition,
+    late_temp_f: s.late.temp_f,
+    late_precip_chance: s.late.precip_chance,
   };
   if (s.day) body.day = s.day;
   return body;
@@ -426,10 +457,14 @@ export interface WeatherSignalRead {
   zone: string;
   day: string;
   date: string; // "YYYY-MM-DD"
-  severity: number;
+  severity: number; // whole-day aggregate — kept for back-compat
   condition: string;
   temp_f: number;
   precip_chance: number;
+  morning: DaypartWeatherFields;
+  midday: DaypartWeatherFields;
+  dinner: DaypartWeatherFields;
+  late: DaypartWeatherFields;
 }
 
 /**
@@ -447,6 +482,12 @@ export async function fetchWeatherSignals(args: {
     zoneDayConstraints(args.zones, args.days),
     5000,
   );
+  const daypartFields = (r: Record<string, unknown>, prefix: string): DaypartWeatherFields => ({
+    severity: toNumber(r[`${prefix}_severity`]),
+    condition: toStr(r[`${prefix}_condition`]),
+    temp_f: toNumber(r[`${prefix}_temp_f`]),
+    precip_chance: toNumber(r[`${prefix}_precip_chance`]),
+  });
   return rows.map((r) => ({
     zone: toStr(r["zone"]),
     day: toStr(r["day"]),
@@ -455,6 +496,10 @@ export async function fetchWeatherSignals(args: {
     condition: toStr(r["condition"]),
     temp_f: toNumber(r["temp_f"]),
     precip_chance: toNumber(r["precip_chance"]),
+    morning: daypartFields(r, "morning"),
+    midday: daypartFields(r, "midday"),
+    dinner: daypartFields(r, "dinner"),
+    late: daypartFields(r, "late"),
   }));
 }
 

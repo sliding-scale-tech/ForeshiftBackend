@@ -3,18 +3,23 @@ import { v } from "convex/values";
 
 export default defineSchema(
   {
-    // Zone geography — one row per Detroit zone. Holds the centroid (lat/lng) used
-    // to compute event proximity (haversine venue -> zone centroid; tiers 1.0/0.5/0).
-    // See CLAUDE.md "Event ingestion — locked decisions".
-    //
-    // `source` marks provenance: "approximate" = our best-estimate placeholder,
-    // "official" = coordinates provided by ForeShift. Overwrite approximate rows in
-    // place when ForeShift hands over authoritative ZoneGeo / GeoJSON.
-    zones: defineTable({
+    // Zone geography — one row per Detroit zone, sourced from ForeShift's
+    // foreshift_13_zones.geojson (client-delivered package; see
+    // ZONE_ASSIGNMENT_BRIEF.md). Holds the full polygon/multipolygon boundary
+    // (for onboarding address -> zone point-in-polygon assignment, see
+    // lib/pointInPolygon.ts) plus a derived centroid (for event proximity —
+    // haversine venue -> zone centroid; tiers 1.0/0.5/0, see CLAUDE.md
+    // "Event ingestion — locked decisions"). Replaces the old `zones` table
+    // of hand-picked approximate centroids — this is real, official boundary
+    // data, not a placeholder.
+    zoneGeometry: defineTable({
       name: v.string(), // canonical zone string — must match convex/lib/vocab.ts exactly
-      lat: v.number(),
-      lng: v.number(),
-      source: v.union(v.literal("approximate"), v.literal("official")),
+      marketIndex: v.number(),
+      source: v.string(), // provenance from the GeoJSON, e.g. "drawn_box" / "official_neighborhood"
+      geometryType: v.union(v.literal("Polygon"), v.literal("MultiPolygon")),
+      coordinates: v.any(), // GeoJSON coordinates, [lng, lat] pairs, nested per geometryType
+      centroidLat: v.number(),
+      centroidLng: v.number(),
     }).index("by_name", ["name"]),
 
     // Owner-editable coefficients — one table per set (backend spec §4.2/§4.3/§4.4 +

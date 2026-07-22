@@ -114,6 +114,56 @@ http.route({
   }),
 });
 
+// POST /zone-assign — onboarding: geocoded lat/lng -> canonical zone, via
+// point-in-polygon against the client-delivered 13-zone GeoJSON
+// (README_zones.md priority order: downtown sub-zones -> Downtown Core ->
+// rest). Bubble geocodes the operator's address and calls this with just
+// the coordinates; this endpoint is pure geometry, no external calls.
+//   Body: { lat: number, lng: number }
+//   Returns: { zone: "Woodward Core", market_index: 100, outside_coverage: false }
+//         or { zone: null, market_index: null, outside_coverage: true }
+http.route({
+  path: "/zone-assign",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const secret = process.env.FORESHIFT_SHARED_SECRET;
+    if (secret && req.headers.get("x-foreshift-secret") !== secret) {
+      return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    let body: { lat?: unknown; lng?: unknown };
+    try {
+      body = (await req.json()) as typeof body;
+    } catch {
+      return Response.json({ ok: false, error: "Body must be JSON." }, { status: 400 });
+    }
+
+    const lat = typeof body.lat === "number" ? body.lat : null;
+    const lng = typeof body.lng === "number" ? body.lng : null;
+    if (lat === null || lng === null) {
+      return Response.json(
+        { ok: false, error: "Missing lat or lng (numbers)." },
+        { status: 400 },
+      );
+    }
+
+    try {
+      const result = await ctx.runQuery(internal.zones.assign, { lat, lng });
+      return Response.json(
+        {
+          zone: result.zone,
+          market_index: result.marketIndex,
+          outside_coverage: result.outsideCoverage,
+        },
+        { status: 200 },
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return Response.json({ ok: false, error: message }, { status: 400 });
+    }
+  }),
+});
+
 // POST /operator/week — operator dashboard's demand data layer (7-day grid +
 // day-detail). Body: { zone, concept }. Returns each of the 7 days with a
 // `peak` rollup (busiest daypart — drives the 7-day grid card) and the full

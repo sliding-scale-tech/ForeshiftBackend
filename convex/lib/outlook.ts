@@ -57,8 +57,21 @@ export interface DayDrivers {
     proximity: number;
     distance_miles: number;
     time: string | null;
+    lift_score: number;
+    lift_percent: number | null;
   }[];
-  weather: { condition: string; severity: number; temp_f: number } | null;
+  // One entry per daypart that has a weather reading (normally all 4) —
+  // weather can now genuinely differ across the day (rain moving in by
+  // dinner, clear at lunch), unlike the old single value shared by all 4
+  // dayparts.
+  weather: {
+    daypart: Daypart;
+    condition: string;
+    severity: number;
+    temp_f: number;
+    weather_impact_score: number;
+    weather_impact_percent: number;
+  }[];
 }
 
 export interface DayOutlook {
@@ -121,7 +134,9 @@ function resolveDayOutlook(args: {
       events: cells.flatMap((c) =>
         c.events.map((e) => ({ ...e, daypart: c.daypart })),
       ),
-      weather: cells[0].weather,
+      weather: cells.flatMap((c) =>
+        c.weather ? [{ ...c.weather, daypart: c.daypart }] : [],
+      ),
     },
   };
 }

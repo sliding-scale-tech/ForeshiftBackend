@@ -33,13 +33,23 @@ type ClassifiedEvent = NormalizedEvent & {
   magnitude: number;
 };
 
-// Shared core: derive the Detroit search area from the seeded zone centroids,
+// Zone centroid, as returned by zones.list (derived from the real
+// foreshift_13_zones.geojson boundary, not the old approximate guesses).
+type ZoneCentroid = {
+  name: string;
+  marketIndex: number;
+  source: string;
+  centroidLat: number;
+  centroidLng: number;
+};
+
+// Shared core: derive the Detroit search area from the zone centroids,
 // build the next-`days` date window, and fetch normalized events in one call.
 async function gatherDetroitEvents(
   ctx: ActionCtx,
   days: number,
 ): Promise<{
-  zones: Doc<"zones">[];
+  zones: ZoneCentroid[];
   searchArea: { latlong: string; radiusMiles: number };
   window: { start: string; end: string; days: number };
   events: NormalizedEvent[];
@@ -51,9 +61,9 @@ async function gatherDetroitEvents(
     );
   }
 
-  const zones: Doc<"zones">[] = await ctx.runQuery(api.zones.list, {});
+  const zones: ZoneCentroid[] = await ctx.runQuery(api.zones.list, {});
   const { latlong, radiusMiles } = computeSearchArea(
-    zones.map((z) => ({ lat: z.lat, lng: z.lng })),
+    zones.map((z) => ({ lat: z.centroidLat, lng: z.centroidLng })),
     PROXIMITY_FAR_MILES,
   );
 
@@ -196,7 +206,7 @@ async function computeEventSignalRows(
 
     let matched = 0;
     for (const zone of zones) {
-      const dist = haversineMiles(venue, { lat: zone.lat, lng: zone.lng });
+      const dist = haversineMiles(venue, { lat: zone.centroidLat, lng: zone.centroidLng });
       const proximity = proximityTier(dist);
       if (proximity === 0) continue;
       matched += 1;
