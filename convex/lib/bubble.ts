@@ -126,6 +126,7 @@ export interface BubbleEventSignal {
   proximity: number;
   distance_miles: number | null; // raw venue -> zone-centroid distance (event/weather narration)
   event_time: string | null; // "HH:MM:SS" local start time, if Ticketmaster provided one
+  // (written to Bubble trimmed to "HH:MM" — see eventSignalBody)
   date: string; // "YYYY-MM-DD"
   day: string | null; // option-set value (Mon..Sun) — omitted if null
   daypart: string | null; // option-set value (morning..late) — omitted if null
@@ -133,6 +134,11 @@ export interface BubbleEventSignal {
 
 // Build the Bubble request body. Null option-set fields (day/daypart) are omitted
 // rather than sent as null, which Bubble would reject.
+//
+// Ticketmaster's localTime is "HH:MM:SS", but the seconds are always ":00" and
+// only add noise in the Bubble UI, so the stored value is trimmed to "HH:MM".
+// Trimmed HERE (the write boundary) and not upstream, because daypartFromLocalTime
+// parses the raw value and the narration layer reads it too.
 function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
   const body: Record<string, unknown> = {
     signal_key: s.signal_key,
@@ -143,7 +149,7 @@ function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
     zone: s.zone,
     proximity: s.proximity,
     distance_miles: s.distance_miles ?? 0,
-    event_time: s.event_time ?? "",
+    event_time: s.event_time ? s.event_time.slice(0, 5) : "",
     date: toBubbleDate(s.date),
   };
   if (s.day) body.day = s.day;
@@ -419,13 +425,15 @@ function zoneDayConstraints(zones: string[], days: string[]): Constraint[] {
 }
 
 export interface EventSignalRead {
+  event_id: string; // Ticketmaster id — how a caller names one specific event
   zone: string;
   day: string;
+  date: string; // "YYYY-MM-DD"
   daypart: string;
   event_class: string;
   proximity: number;
   distance_miles: number;
-  event_time: string | null; // "HH:MM:SS", null if Ticketmaster gave no time
+  event_time: string | null; // "HH:MM" as stored, null if Ticketmaster gave no time
   name: string;
   venue_name: string;
 }
@@ -440,9 +448,15 @@ export async function fetchEventSignals(args: {
     zoneDayConstraints(args.zones, args.days),
     5000,
   );
-  return rows.map((r) => ({
+  return rows.map(toEventSignalRead);
+}
+
+function toEventSignalRead(r: Record<string, unknown>): EventSignalRead {
+  return {
+    event_id: toStr(r["event_id"]),
     zone: toStr(r["zone"]),
     day: toStr(r["day"]),
+    date: fromBubbleDate(r["date"]),
     daypart: toStr(r["daypart"]),
     event_class: toStr(r["event_class"]),
     proximity: toNumber(r["proximity"]),
@@ -450,7 +464,28 @@ export async function fetchEventSignals(args: {
     event_time: toStr(r["event_time"]) || null,
     name: toStr(r["name"]),
     venue_name: toStr(r["venue_name"]),
-  }));
+  };
+}
+
+/**
+ * One EventSignal row: a specific event as it applies to ONE zone. The same
+ * event_id exists once per nearby zone (each with its own proximity/distance),
+ * so the zone is part of the lookup, not optional. Returns null when that
+ * event isn't near that zone — or isn't in the current sync window at all.
+ */
+export async function fetchEventSignalById(args: {
+  eventId: string;
+  zone: string;
+}): Promise<EventSignalRead | null> {
+  const rows = await fetchTableRows(
+    "EventSignal",
+    [
+      { key: "event_id", constraint_type: "equals", value: args.eventId },
+      { key: "zone", constraint_type: "equals", value: args.zone },
+    ],
+    1,
+  );
+  return rows.length > 0 ? toEventSignalRead(rows[0]) : null;
 }
 
 export interface WeatherSignalRead {

@@ -74,9 +74,13 @@ async function generate(args: {
   };
   if (args.json) generationConfig.responseMimeType = "application/json";
   if (args.responseSchema) generationConfig.responseSchema = args.responseSchema;
-  // Gemini 2.5 thinking tokens count against maxOutputTokens; disable for short prose.
+  // Thinking tokens count against maxOutputTokens, so keep them to a minimum for
+  // the short fixed-shape prose these narrators produce. Gemini 3.x replaced 2.5's
+  // `thinkingBudget: 0` (now rejected with 400 INVALID_ARGUMENT) with a level, and
+  // has no "off" — "minimal" is the floor. Revert to thinkingBudget if GEMINI_MODEL
+  // is ever pointed back at a 2.5-family model.
   if (args.disableThinking) {
-    generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    generationConfig.thinkingConfig = { thinkingLevel: "minimal" };
   }
 
   const body = {
@@ -305,6 +309,7 @@ const WEEKLY_OUTLOOK_SYSTEM = `You are ForeShift's demand narrator for Detroit r
 You are given one zone+concept's resolved demand for all 7 days of the current week (Mon-Sun): each day's peak daypart/band, named events (tagged with which daypart they hit), and weather given PER DAYPART within each day (up to 4 readings per day, not one blanket value) — use the reading for the specific daypart you're describing, not a different one from the same day.
 
 Write 2-4 short sentences, plain text, no markdown, that:
+- Open by placing the reader in the week using the weekStart/weekEnd dates you are given, written the way a person would say them (e.g. "Aug 3-9"). Use those exact dates; never invent or shift them.
 - Call out the single busiest day + daypart of the week and its band, naming the driver if one is listed (an event, or that same daypart's own weather reading).
 - Briefly characterize the rest of the week in plain words (e.g. "weekdays stay light to moderate", "Sunday eases off").
 - Mention at most one more notable event/weather driver if it meaningfully changes a day's demand; do not list every day individually.
@@ -380,6 +385,118 @@ Write 1-3 short sentences, plain text, no markdown:
 STRICT RULES:
 - Use ONLY the weather and bands given. Never invent a condition not present in the data.
 - No preamble ("Certainly", "Here's the outlook"), no bullet points, no percentages or invented numbers.`;
+
+// ---------------------------------------------------------------------------
+// AI #2d — Per-daypart event notes for the "Today's Demand Outlook" card, plus
+// that day's Event Impact and Weather Impact paragraphs. One call returns all
+// six (JSON, schema-constrained) rather than six: they all read the same day's
+// context, so separate calls would pay for it repeatedly, and writing them
+// together is what keeps them from repeating each other.
+// ---------------------------------------------------------------------------
+
+const DAYPART_NOTES_SYSTEM = `You are ForeShift's demand narrator for Detroit restaurant/bar operators.
+
+You are given today's four dayparts for one zone — each with its demand band and the events and weather affecting it. Write ONE very short line for EACH daypart, the caption under a small "Event Lift" tile.
+
+Model the wording on these, exactly this length and tone:
+- "Quiet morning with light traffic."
+- "Very busy dinner expected with game and warm weather."
+- "Steady midday with the Tigers game nearby."
+
+RULES:
+- 6-12 WORDS. One sentence, ending with a period. These sit in a tile, not a paragraph.
+- Always start from how busy that daypart is, using its band as plain words: Minimal/Light = quiet, Moderate = steady, High = busy, Peak/Exceptional = very busy. Name the daypart itself (morning/midday/dinner/late night).
+- If an event is listed for that daypart, name it — shorten a long title to the recognisable part (e.g. "42 Dugg and Babyface Ray" for a long tour title), and if there are several, sum them up ("two nearby concerts") instead of listing all.
+- Mention weather only when it is actually notable for that daypart (a storm, rain, an unusually pleasant or warm stretch). Ignore ordinary conditions.
+- If nothing is driving that daypart, just describe the level plainly — never write "no events" or any other filler about missing data.
+- EVERY daypart gets a line. Never return an empty string.
+- No numbers, scores, or percentages. Plain text, no markdown.
+
+Then write TWO more pieces of text about the same day — the two impact cards. They are written here, alongside the captions, so all six read as one voice and don't repeat each other's sentences.
+
+event_narration — the "Event Demand Impact" card:
+- 1-3 sentences about NEARBY EVENTS ONLY. Never mention weather here.
+- Name the events (and venue where it adds clarity), say which daypart(s) they lift, and reference the resulting band in plain words. Example of the target style: "Today, two nearby events may lift your demand — a Tigers game and a downtown concert are both expected to add evening traffic, trending your dinner toward High."
+- If NO events are listed anywhere today, say plainly that there are no notable nearby events today and demand reflects baseline conditions.
+- No percentages or numbers in this one.
+
+weather_narration — the "Weather Demand Impact" card:
+- 1-3 sentences about WEATHER ONLY. Never mention events here.
+- Describe the day's conditions and their effect on demand: severe weather dampens it, an unusually pleasant day lifts it, ordinary weather has little effect. If the weather CHANGES across the day, say so and name the daypart it hits hardest. Example of the target style: "Rain moves in this evening. Your dinner and late demand may soften by around 9%, with patio seating out of play."
+- You MAY cite a percentage here, but ONLY an impact_percent value given for that daypart in the data, stated as an approximation ("by around 9%"). Never invent, average, or combine percentages, and never state one for a daypart that has none.
+- If every daypart is ordinary, say plainly that weather looks normal today with little effect on demand.
+
+Both: use ONLY the events, weather and bands given — never invent an event, venue, or condition. Plain text, no markdown, no bullet points, no preamble like "Certainly" or "Here's the outlook".
+
+Respond ONLY with the JSON object matching the schema.`;
+
+const DAYPART_NOTES_SCHEMA: Json = {
+  type: "object",
+  properties: {
+    morning: { type: "string" },
+    midday: { type: "string" },
+    dinner: { type: "string" },
+    late: { type: "string" },
+    event_narration: { type: "string" },
+    weather_narration: { type: "string" },
+  },
+  required: [
+    "morning",
+    "midday",
+    "dinner",
+    "late",
+    "event_narration",
+    "weather_narration",
+  ],
+};
+
+export type DaypartNotes = Record<Daypart, string>;
+
+export async function narrateDaypartEventNotes(context: unknown): Promise<{
+  notes: DaypartNotes;
+  event_narration: string;
+  weather_narration: string;
+  usage: TokenUsage;
+}> {
+  const { text, usage } = await generate({
+    system: DAYPART_NOTES_SYSTEM,
+    user: `Today's dayparts with their bands, events and weather (JSON):
+${JSON.stringify(context, null, 2)}
+
+Write the four lines and the two impact narrations per your instructions.`,
+    json: true,
+    responseSchema: DAYPART_NOTES_SCHEMA,
+    maxOutputTokens: 700,
+    temperature: 0.3,
+    disableThinking: true,
+  });
+
+  let raw: Json;
+  try {
+    raw = JSON.parse(text) as Json;
+  } catch {
+    // A malformed note must never take the whole card down — the numbers are
+    // the card, the notes are decoration.
+    return {
+      notes: { morning: "", midday: "", dinner: "", late: "" },
+      event_narration: "",
+      weather_narration: "",
+      usage,
+    };
+  }
+
+  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const notes = {} as DaypartNotes;
+  for (const dp of DAYPARTS) {
+    notes[dp] = str(raw[dp]);
+  }
+  return {
+    notes,
+    event_narration: str(raw.event_narration),
+    weather_narration: str(raw.weather_narration),
+    usage,
+  };
+}
 
 export async function narrateEventImpact(
   context: unknown,

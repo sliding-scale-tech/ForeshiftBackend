@@ -12,6 +12,7 @@ import type * as ai from "../ai.js";
 import type * as coefficients from "../coefficients.js";
 import type * as crons from "../crons.js";
 import type * as demand from "../demand.js";
+import type * as eventImpact from "../eventImpact.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
 import type * as lib_aggregate from "../lib/aggregate.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   coefficients: typeof coefficients;
   crons: typeof crons;
   demand: typeof demand;
+  eventImpact: typeof eventImpact;
   events: typeof events;
   http: typeof http;
   "lib/aggregate": typeof lib_aggregate;
