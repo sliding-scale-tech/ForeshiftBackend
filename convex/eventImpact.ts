@@ -29,17 +29,20 @@ import {
 export interface EventImpactDaypart {
   daypart: Daypart;
   // How much this event raises that daypart against its own baseline, as
-  // lift ÷ base_score × 100. Signed, 1 decimal, no "%" — the UI adds the
-  // symbol, same convention as the outlook cards.
+  // lift ÷ base_score × 100. A real number rounded to 1 decimal (48.5, not
+  // "+48.5") so the client can compare, sort and format it. A JSON number
+  // can't carry a leading "+", and it doesn't need one here: event lift is
+  // magnitude × affinity × proximity, all of which are >= 0, so this value is
+  // never negative — only weather can push demand down.
   //
   // NOTE this ratio is not defined in any ForeShift spec: the specs only give
   // the SCORE math (final = (base + event_lift) × weather_factor, capped at
   // 150). Expressing that lift as a percentage of base is this API's own
   // presentation choice — change it here if the owner defines it differently.
   //
-  // "0" on the three dayparts the event doesn't fall in, and on a closed
-  // daypart whose base_score is 0 (nothing to take a percentage of).
-  percent: string;
+  // 0 on the three dayparts the event doesn't fall in, and on a closed daypart
+  // whose base_score is 0 (nothing to take a percentage of).
+  percent: number;
 }
 
 export interface EventImpactResult {
@@ -67,10 +70,9 @@ export interface EventImpactResult {
   impact_band: Band;
 }
 
-/** 47.0537 -> "+47.1", 0 -> "0". */
-function signedPercent(n: number): string {
-  const rounded = Math.round(n * 10) / 10;
-  return rounded > 0 ? `+${rounded}` : `${rounded}`;
+/** 47.0537 -> 47.1 */
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
 }
 
 export const getEventImpact = internalAction({
@@ -138,7 +140,7 @@ export const getEventImpact = internalAction({
       const applies = dp === eventDaypart && base_score > 0;
       return {
         daypart: dp,
-        percent: applies ? signedPercent((lift / base_score) * 100) : "0",
+        percent: applies ? round1((lift / base_score) * 100) : 0,
       };
     });
 
