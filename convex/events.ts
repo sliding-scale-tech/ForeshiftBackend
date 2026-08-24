@@ -253,60 +253,71 @@ export const assignEventsToZones = internalAction({
 // Step 2e: sync the computed rows into Bubble EventSignal. Upserts by signal_key
 // (update if the key exists, else create). With deleteStale=true, also removes
 // Bubble rows whose signal_key is no longer produced (last week's events).
+//
+// Chains into the weather sync on completion (see `finally` below) instead of
+// waiting on a separately-scheduled cron — the `finally` runs whether this sync
+// succeeded or threw, so a failure here still lets the weather sync attempt its
+// run rather than blocking the rest of the weekly chain. See crons.ts.
 export const syncEventSignalsToBubble = internalAction({
   args: { days: v.optional(v.number()), deleteStale: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
-    // Cap at the upcoming Monday (not a flat 7) so this always targets one
-    // coherent Mon..Sun week — a mid-week run (delayed cron, manual re-sync)
-    // must not bleed into next week's Mon/Tue/Wed and overwrite this week's
-    // day-slots with next week's dates.
-    const days = args.days ?? daysUntilNextMonday(new Date());
-    const { summary, rows } = await computeEventSignalRows(ctx, days);
-    const existing = await listEventSignalIds();
+    try {
+      // Cap at the upcoming Monday (not a flat 7) so this always targets one
+      // coherent Mon..Sun week — a mid-week run (delayed cron, manual re-sync)
+      // must not bleed into next week's Mon/Tue/Wed and overwrite this week's
+      // day-slots with next week's dates.
+      const days = args.days ?? daysUntilNextMonday(new Date());
+      const { summary, rows } = await computeEventSignalRows(ctx, days);
+      const existing = await listEventSignalIds();
 
-    let created = 0;
-    let updated = 0;
-    let deleted = 0;
-    const seen = new Set<string>();
+      let created = 0;
+      let updated = 0;
+      let deleted = 0;
+      const seen = new Set<string>();
 
-    for (const row of rows) {
-      const body: BubbleEventSignal = {
-        signal_key: row.signal_key,
-        event_id: row.eventId,
-        name: row.name,
-        venue_name: row.venueName,
-        event_class: row.eventClass,
-        zone: row.zone,
-        proximity: row.proximity,
-        distance_miles: row.distanceMiles,
-        event_time: row.time,
-        date: row.date,
-        day: row.day,
-        daypart: row.daypart,
-      };
-      seen.add(row.signal_key);
-      const id = existing.get(row.signal_key);
-      if (id) {
-        await updateEventSignal(id, body);
-        updated += 1;
-      } else {
-        await createEventSignal(body);
-        created += 1;
-      }
-    }
-
-    if (args.deleteStale) {
-      for (const [key, id] of existing) {
-        if (!seen.has(key)) {
-          await deleteEventSignal(id);
-          deleted += 1;
+      for (const row of rows) {
+        const body: BubbleEventSignal = {
+          signal_key: row.signal_key,
+          event_id: row.eventId,
+          name: row.name,
+          venue_name: row.venueName,
+          event_class: row.eventClass,
+          zone: row.zone,
+          proximity: row.proximity,
+          distance_miles: row.distanceMiles,
+          event_time: row.time,
+          date: row.date,
+          day: row.day,
+          daypart: row.daypart,
+        };
+        seen.add(row.signal_key);
+        const id = existing.get(row.signal_key);
+        if (id) {
+          await updateEventSignal(id, body);
+          updated += 1;
+        } else {
+          await createEventSignal(body);
+          created += 1;
         }
       }
-    }
 
-    return {
-      computed: summary,
-      bubble: { created, updated, deleted, existingBefore: existing.size },
-    };
+      if (args.deleteStale) {
+        for (const [key, id] of existing) {
+          if (!seen.has(key)) {
+            await deleteEventSignal(id);
+            deleted += 1;
+          }
+        }
+      }
+
+      return {
+        computed: summary,
+        bubble: { created, updated, deleted, existingBefore: existing.size },
+      };
+    } finally {
+      await ctx.scheduler.runAfter(0, internal.weather.syncWeatherSignalsToBubble, {
+        deleteStale: true,
+      });
+    }
   },
 });

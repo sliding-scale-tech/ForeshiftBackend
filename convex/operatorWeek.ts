@@ -260,6 +260,34 @@ async function runSyncResolvedDemandToBubble(
   }
 }
 
+// This sync now runs immediately after the weather sync completes (chained via
+// ctx.scheduler.runAfter — see weather.ts) instead of after a fixed 30-min
+// buffer. Bubble's search/constraint reads have no published consistency SLA
+// against a write that just completed, so a read here could in principle land
+// a moment before Bubble's index has caught up with what the event/weather
+// syncs just wrote. An empty result is the only cheap signal available for
+// that (a genuinely event-free week is more likely than the alternative, but a
+// couple of short retries costs nothing and closes the more dangerous gap).
+async function fetchWithIndexLagRetry<T>(
+  fetchFn: () => Promise<T[]>,
+  label: string,
+): Promise<T[]> {
+  const retryDelaysMs = [5_000, 10_000];
+  let rows = await fetchFn();
+  for (const delayMs of retryDelaysMs) {
+    if (rows.length > 0) break;
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    rows = await fetchFn();
+  }
+  if (rows.length === 0) {
+    console.warn(
+      `${label} returned no rows after retries — either a genuinely empty ` +
+        `week or Bubble's index hasn't caught up yet; proceeding anyway.`,
+    );
+  }
+  return rows;
+}
+
 async function doSync(
   ctx: ActionCtx,
   args: { deleteStale?: boolean },
@@ -269,14 +297,14 @@ async function doSync(
       concepts: [],
       days: [],
     });
-    const events: EventSignalRead[] = await fetchEventSignals({
-      zones: [],
-      days: [],
-    });
-    const weather: WeatherSignalRead[] = await fetchWeatherSignals({
-      zones: [],
-      days: [],
-    });
+    const events: EventSignalRead[] = await fetchWithIndexLagRetry(
+      () => fetchEventSignals({ zones: [], days: [] }),
+      "EventSignal read",
+    );
+    const weather: WeatherSignalRead[] = await fetchWithIndexLagRetry(
+      () => fetchWeatherSignals({ zones: [], days: [] }),
+      "WeatherSignal read",
+    );
     const coeffs: CoefficientBundle = await ctx.runQuery(
       internal.coefficients.getAll,
       {},

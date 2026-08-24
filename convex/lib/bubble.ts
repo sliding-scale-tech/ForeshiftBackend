@@ -60,6 +60,56 @@ function config() {
   return { base: base.replace(/\/$/, ""), token, table };
 }
 
+// Bubble's Data API enforces a combined read+write cap of 1000 requests/minute
+// per app. A single weekly resolvedDemand sync alone can issue ~850 requests
+// (819 upserts + paginated list-existing calls), which leaves almost no margin
+// on its own — and since the weekly syncs now chain directly into each other
+// (see crons.ts), a slow stage's tail requests can land in the same rolling
+// minute as the next stage's burst. Every outbound Bubble call in this module
+// goes through `bubbleFetch` so total throughput never approaches the real
+// ceiling, regardless of how many stages happen to overlap.
+const RATE_LIMIT_PER_MINUTE = 800; // headroom under Bubble's stated 1000/min cap
+const requestTimestamps: number[] = [];
+
+async function waitForRateLimitSlot(): Promise<void> {
+  for (;;) {
+    const now = Date.now();
+    while (requestTimestamps.length > 0 && now - requestTimestamps[0] >= 60_000) {
+      requestTimestamps.shift();
+    }
+    if (requestTimestamps.length < RATE_LIMIT_PER_MINUTE) {
+      requestTimestamps.push(now);
+      return;
+    }
+    const waitMs = 60_000 - (now - requestTimestamps[0]) + 10;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
+// Bubble signals overload two ways: 429 (rate limit, usually with a
+// Retry-After header) and 503 "app too busy" (transient capacity, no header)
+// — retry both with backoff on top of the rate-limit pacing above, so a burst
+// degrades to "a bit slower" instead of a hard failure.
+const RETRYABLE_STATUS = new Set([429, 503]);
+
+async function bubbleFetch(
+  url: string,
+  init: RequestInit,
+  maxRetries = 5,
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    await waitForRateLimitSlot();
+    const res = await fetch(url, init);
+    if (!RETRYABLE_STATUS.has(res.status) || attempt >= maxRetries) return res;
+    const retryAfterSec = Number(res.headers.get("Retry-After"));
+    const delayMs =
+      Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? retryAfterSec * 1000
+        : 400 * 2 ** attempt;
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+}
+
 function toNumber(v: unknown): number {
   const n = typeof v === "number" ? v : parseFloat(toStr(v));
   return Number.isFinite(n) ? n : 0;
@@ -166,7 +216,7 @@ export async function listEventSignalIds(): Promise<Map<string, string>> {
     const params = new URLSearchParams();
     params.set("limit", "100");
     params.set("cursor", String(cursor));
-    const res = await fetch(`${base}/${EVENT_SIGNAL_TABLE}?${params.toString()}`, {
+    const res = await bubbleFetch(`${base}/${EVENT_SIGNAL_TABLE}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
@@ -190,7 +240,7 @@ export async function listEventSignalIds(): Promise<Map<string, string>> {
 
 export async function createEventSignal(s: BubbleEventSignal): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${EVENT_SIGNAL_TABLE}`, {
+  const res = await bubbleFetch(`${base}/${EVENT_SIGNAL_TABLE}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -210,7 +260,7 @@ export async function updateEventSignal(
   s: BubbleEventSignal,
 ): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${EVENT_SIGNAL_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${EVENT_SIGNAL_TABLE}/${bubbleId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -227,7 +277,7 @@ export async function updateEventSignal(
 
 export async function deleteEventSignal(bubbleId: string): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${EVENT_SIGNAL_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${EVENT_SIGNAL_TABLE}/${bubbleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -311,7 +361,7 @@ export async function listWeatherSignalIds(): Promise<Map<string, string>> {
     const params = new URLSearchParams();
     params.set("limit", "100");
     params.set("cursor", String(cursor));
-    const res = await fetch(
+    const res = await bubbleFetch(
       `${base}/${WEATHER_SIGNAL_TABLE}?${params.toString()}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
@@ -336,7 +386,7 @@ export async function listWeatherSignalIds(): Promise<Map<string, string>> {
 
 export async function createWeatherSignal(s: BubbleWeatherSignal): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${WEATHER_SIGNAL_TABLE}`, {
+  const res = await bubbleFetch(`${base}/${WEATHER_SIGNAL_TABLE}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -356,7 +406,7 @@ export async function updateWeatherSignal(
   s: BubbleWeatherSignal,
 ): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${WEATHER_SIGNAL_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${WEATHER_SIGNAL_TABLE}/${bubbleId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -373,7 +423,7 @@ export async function updateWeatherSignal(
 
 export async function deleteWeatherSignal(bubbleId: string): Promise<void> {
   const { base, token } = config();
-  const res = await fetch(`${base}/${WEATHER_SIGNAL_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${WEATHER_SIGNAL_TABLE}/${bubbleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -399,7 +449,7 @@ async function fetchTableRows(
     if (constraints.length) params.set("constraints", JSON.stringify(constraints));
     params.set("limit", "100");
     params.set("cursor", String(cursor));
-    const res = await fetch(`${base}/${table}?${params.toString()}`, {
+    const res = await bubbleFetch(`${base}/${table}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
@@ -574,7 +624,7 @@ export async function fetchDemandRecords(args: {
     params.set("limit", String(pageSize));
     params.set("cursor", String(cursor));
 
-    const res = await fetch(`${base}/${table}?${params.toString()}`, {
+    const res = await bubbleFetch(`${base}/${table}?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
@@ -644,7 +694,7 @@ export async function listResolvedDemandIds(): Promise<Map<string, string>> {
     const params = new URLSearchParams();
     params.set("limit", "100");
     params.set("cursor", String(cursor));
-    const res = await fetch(
+    const res = await bubbleFetch(
       `${base}/${RESOLVED_DEMAND_TABLE}?${params.toString()}`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
@@ -667,35 +717,14 @@ export async function listResolvedDemandIds(): Promise<Map<string, string>> {
   return map;
 }
 
-// ResolvedDemand rows are now written with bounded concurrency (see
-// runWithConcurrency in operatorWeek.ts) instead of one-at-a-time, which makes
-// hitting Bubble's rate/capacity limits far more likely than under a strictly
-// sequential loop. Bubble signals overload two ways: 429 (rate limit, usually
-// with a Retry-After header) and 503 "app too busy" (transient capacity, no
-// header) — retry both with backoff so a burst of concurrent writes degrades
-// to "a bit slower" instead of a hard failure.
-const RETRYABLE_STATUS = new Set([429, 503]);
-
-async function fetchWithRetry(
-  url: string,
-  init: RequestInit,
-  maxRetries = 5,
-): Promise<Response> {
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, init);
-    if (!RETRYABLE_STATUS.has(res.status) || attempt >= maxRetries) return res;
-    const retryAfterSec = Number(res.headers.get("Retry-After"));
-    const delayMs =
-      Number.isFinite(retryAfterSec) && retryAfterSec > 0
-        ? retryAfterSec * 1000
-        : 400 * 2 ** attempt;
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
-}
-
+// ResolvedDemand rows are written with bounded concurrency (see
+// runWithConcurrency in operatorWeek.ts) instead of one-at-a-time — bubbleFetch's
+// rate-limit pacing (defined near config() above) is what actually keeps total
+// throughput under Bubble's per-minute cap; the 429/503 retry there is a
+// second line of defense for whatever still slips through.
 export async function createResolvedDemand(s: BubbleResolvedDemand): Promise<void> {
   const { base, token } = config();
-  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}`, {
+  const res = await bubbleFetch(`${base}/${RESOLVED_DEMAND_TABLE}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -715,7 +744,7 @@ export async function updateResolvedDemand(
   s: BubbleResolvedDemand,
 ): Promise<void> {
   const { base, token } = config();
-  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -732,7 +761,7 @@ export async function updateResolvedDemand(
 
 export async function deleteResolvedDemand(bubbleId: string): Promise<void> {
   const { base, token } = config();
-  const res = await fetchWithRetry(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
+  const res = await bubbleFetch(`${base}/${RESOLVED_DEMAND_TABLE}/${bubbleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
