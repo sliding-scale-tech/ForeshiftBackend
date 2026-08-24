@@ -208,6 +208,10 @@ http.route({
   }),
 });
 
+// Body also takes an optional "date" ("YYYY-MM-DD") for the day-scoped types,
+// so the card can show any day of the CURRENT week, not just today. Weekly
+// ignores it.
+//
 // POST /demand/outlook — "Today's Demand Outlook" / "This Week's Demand
 // Outlook" / "Event Demand Impact" / "Weather Demand Impact" cards. Body:
 // { zone, concept, type? }. type is "today" (default), "weekly", "events",
@@ -224,7 +228,12 @@ http.route({
       return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    let body: { zone?: unknown; concept?: unknown; type?: unknown };
+    let body: {
+      zone?: unknown;
+      concept?: unknown;
+      type?: unknown;
+      date?: unknown;
+    };
     try {
       body = (await req.json()) as typeof body;
     } catch {
@@ -243,17 +252,70 @@ http.route({
       body.type === "weekly" || body.type === "events" || body.type === "weather"
         ? body.type
         : "today";
+    // Optional "YYYY-MM-DD" — which day the day-scoped cards describe. Blank or
+    // absent means today; anything present is validated inside getOutlook.
+    const date =
+      typeof body.date === "string" && body.date.trim() !== ""
+        ? body.date.trim()
+        : undefined;
 
     try {
       const result = await ctx.runAction(internal.outlook.getOutlook, {
         zone,
         concept,
         type,
+        date,
       });
       return Response.json(result, { status: 200 });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[/demand/outlook] pipeline error:", message);
+      return Response.json({ ok: false, error: message }, { status: 400 });
+    }
+  }),
+});
+
+// POST /event/impact — one event's isolated effect on a zone+concept's demand.
+// Body: { event_id, zone, concept }. Returns that event's lift per daypart and
+// for the day, with the resulting band. No AI, no weather — pure math over the
+// stored EventSignal row, so it answers in a single round trip.
+http.route({
+  path: "/event/impact",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const secret = process.env.FORESHIFT_SHARED_SECRET;
+    if (secret && req.headers.get("x-foreshift-secret") !== secret) {
+      return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    let body: { event_id?: unknown; zone?: unknown; concept?: unknown };
+    try {
+      body = (await req.json()) as typeof body;
+    } catch {
+      return Response.json({ ok: false, error: "Body must be JSON." }, { status: 400 });
+    }
+
+    const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+    const event_id = str(body.event_id);
+    const zone = str(body.zone);
+    const concept = str(body.concept);
+    if (!event_id || !zone || !concept) {
+      return Response.json(
+        { ok: false, error: "Missing event_id, zone or concept." },
+        { status: 400 },
+      );
+    }
+
+    try {
+      const result = await ctx.runAction(internal.eventImpact.getEventImpact, {
+        event_id,
+        zone,
+        concept,
+      });
+      return Response.json(result, { status: 200 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[/event/impact] error:", message);
       return Response.json({ ok: false, error: message }, { status: 400 });
     }
   }),

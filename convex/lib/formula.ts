@@ -29,6 +29,10 @@ export interface ResolvedEvent {
   proximity: number;
 }
 
+// Spec §2's hard ceiling on a final score. Exported so callers that express a
+// score as a percentage of the maximum use the same number the cap applies.
+export const SCORE_CAP = 150;
+
 export interface DemandResult {
   event_lift: number;
   weather_factor: number;
@@ -49,7 +53,7 @@ export function computeDemand(args: {
   );
   const weather_factor = 1 - args.weather_severity * args.weather_affinity;
   const raw = (args.base_score + event_lift) * weather_factor;
-  const capped = Math.min(raw, 150);
+  const capped = Math.min(raw, SCORE_CAP);
   // Round to 2 decimals; +EPSILON so exact halves (e.g. 45.375) round up to 45.38.
   const final_score = Math.round((capped + Number.EPSILON) * 100) / 100;
 
