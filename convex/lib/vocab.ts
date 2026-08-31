@@ -119,6 +119,14 @@ export function daysUntilNextMonday(now: Date): number {
   return 7 - sinceMonday;
 }
 
+// Calendar date (YYYY-MM-DD) of the Monday that STARTS next week — i.e. the
+// exclusive upper bound of the [mondayOfWeek(now), nextMondayDate(now)) window
+// the daily signal syncs retain in Bubble. Just `mondayOfWeek(now)` + 7 days.
+export function nextMondayDate(now: Date): string {
+  const monday = new Date(`${mondayOfWeek(now)}T00:00:00Z`);
+  return new Date(monday.getTime() + 7 * 86_400_000).toISOString().slice(0, 10);
+}
+
 // Map a Ticketmaster localTime ("HH:MM:SS") to a daypart, using the windows in
 // DAYPART_WINDOWS. Returns null for closed hours (02:00–06:00) or missing time.
 export function daypartFromLocalTime(localTime: string | null): Daypart | null {

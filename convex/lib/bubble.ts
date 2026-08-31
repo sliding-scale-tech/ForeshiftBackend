@@ -207,10 +207,16 @@ function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
   return body;
 }
 
-/** List existing EventSignal rows -> Map of signal_key -> Bubble _id (paginated). */
-export async function listEventSignalIds(): Promise<Map<string, string>> {
+/** List existing EventSignal rows -> Map of signal_key -> { Bubble _id, date }
+ *  (paginated). The `date` (YYYY-MM-DD) is carried alongside the id because the
+ *  daily sync's windowed stale-delete needs to tell a frozen already-elapsed day
+ *  of the current week from an out-of-window row, and the event signal_key
+ *  (`${eventId}__${zone}`) has no date in it to derive that from. */
+export async function listEventSignalIds(): Promise<
+  Map<string, { id: string; date: string }>
+> {
   const { base, token } = config();
-  const map = new Map<string, string>();
+  const map = new Map<string, { id: string; date: string }>();
   let cursor = 0;
   for (let guard = 0; guard < 500; guard++) {
     const params = new URLSearchParams();
@@ -229,7 +235,9 @@ export async function listEventSignalIds(): Promise<Map<string, string>> {
     for (const row of page) {
       const key = row["signal_key"];
       const id = row["_id"];
-      if (typeof key === "string" && typeof id === "string") map.set(key, id);
+      if (typeof key === "string" && typeof id === "string") {
+        map.set(key, { id, date: fromBubbleDate(row["date"]) });
+      }
     }
     const remaining = data.response?.remaining ?? 0;
     cursor += page.length;

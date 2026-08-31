@@ -9,7 +9,13 @@ import {
   type DaypartWeather,
 } from "./lib/weatherapi";
 import { severityFromForecast, simplifyWeatherCondition } from "./lib/weatherSeverity";
-import { dayFromLocalDate, daysUntilNextMonday, mondayOfWeek, DAYPARTS } from "./lib/vocab";
+import {
+  dayFromLocalDate,
+  daysUntilNextMonday,
+  mondayOfWeek,
+  nextMondayDate,
+  DAYPARTS,
+} from "./lib/vocab";
 import {
   listWeatherSignalIds,
   createWeatherSignal,
@@ -187,8 +193,28 @@ export const syncWeatherSignalsToBubble = internalAction({
       }
 
       if (args.deleteStale) {
+        // Same bounded-window rule as the event sync (see events.ts). Retained
+        // window is [mondayOfThisWeek, nextMonday); the WeatherSignal key is
+        // `${zone}__${YYYY-MM-DD}`, so the date is the last 10 chars. Delete a
+        // stored row only when it is either:
+        //   (a) OUTSIDE the window — a previous week's leftover. Replaces the
+        //       old weekly full wipe; without it WeatherSignal grows forever
+        //       and last week's "Mon" collides with this week's on the
+        //       day-of-week join in resolve.ts (last-write-wins → wrong day's
+        //       weather).
+        //   (b) today-or-later AND not produced this run — a forecast day that
+        //       genuinely dropped out. Guards against the history backfill
+        //       coming back empty (not throwing) and `seen` then missing the
+        //       already-elapsed days: those are in [weekStart, today) so they
+        //       are kept, not deleted.
+        const weekStart = mondayOfWeek(now);
+        const weekEnd = nextMondayDate(now); // exclusive
+        const today = now.toISOString().slice(0, 10);
         for (const [key, id] of existing) {
-          if (!seen.has(key)) {
+          const date = key.slice(-10);
+          const outOfWindow = date < weekStart || date >= weekEnd;
+          const vanishedFuture = date >= today && !seen.has(key);
+          if (outOfWindow || vanishedFuture) {
             await deleteWeatherSignal(id);
             deleted += 1;
           }

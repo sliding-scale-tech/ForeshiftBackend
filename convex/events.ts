@@ -12,6 +12,8 @@ import {
   dayFromLocalDate,
   daypartFromLocalTime,
   daysUntilNextMonday,
+  mondayOfWeek,
+  nextMondayDate,
 } from "./lib/vocab";
 import {
   listEventSignalIds,
@@ -251,22 +253,23 @@ export const assignEventsToZones = internalAction({
 });
 
 // Step 2e: sync the computed rows into Bubble EventSignal. Upserts by signal_key
-// (update if the key exists, else create). With deleteStale=true, also removes
-// Bubble rows whose signal_key is no longer produced (last week's events).
+// (update if the key exists, else create). With deleteStale=true, also prunes
+// Bubble rows — but only within a bounded window (see below), so the daily cron
+// can refresh today..next-Monday without wiping days of the current week that
+// have already elapsed.
 //
 // Chains into the weather sync on completion (see `finally` below) instead of
 // waiting on a separately-scheduled cron — the `finally` runs whether this sync
 // succeeded or threw, so a failure here still lets the weather sync attempt its
-// run rather than blocking the rest of the weekly chain. See crons.ts.
+// run rather than blocking the rest of the daily chain. See crons.ts.
 export const syncEventSignalsToBubble = internalAction({
   args: { days: v.optional(v.number()), deleteStale: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     try {
-      // Cap at the upcoming Monday (not a flat 7) so this always targets one
-      // coherent Mon..Sun week — a mid-week run (delayed cron, manual re-sync)
-      // must not bleed into next week's Mon/Tue/Wed and overwrite this week's
-      // day-slots with next week's dates.
-      const days = args.days ?? daysUntilNextMonday(new Date());
+      const now = new Date();
+      // Fetch window: today through the upcoming Monday (exclusive) — never
+      // reaches into next week, and shrinks through the week as days elapse.
+      const days = args.days ?? daysUntilNextMonday(now);
       const { summary, rows } = await computeEventSignalRows(ctx, days);
       const existing = await listEventSignalIds();
 
@@ -291,9 +294,9 @@ export const syncEventSignalsToBubble = internalAction({
           daypart: row.daypart,
         };
         seen.add(row.signal_key);
-        const id = existing.get(row.signal_key);
-        if (id) {
-          await updateEventSignal(id, body);
+        const found = existing.get(row.signal_key);
+        if (found) {
+          await updateEventSignal(found.id, body);
           updated += 1;
         } else {
           await createEventSignal(body);
@@ -302,8 +305,25 @@ export const syncEventSignalsToBubble = internalAction({
       }
 
       if (args.deleteStale) {
-        for (const [key, id] of existing) {
-          if (!seen.has(key)) {
+        // Retained window is [mondayOfThisWeek, nextMonday). A stored row is
+        // deleted only when it is either:
+        //   (a) OUTSIDE that window — a previous week's leftover (or an
+        //       undated/junk row). This is the cleanup the old weekly full
+        //       wipe used to do; without it EventSignal would grow forever and
+        //       last week's "Mon" would collide with this week's "Mon" on the
+        //       day-of-week join in resolve.ts.
+        //   (b) today-or-later AND not produced by this run — a future event
+        //       that has since been cancelled or rescheduled away.
+        // Rows in [mondayOfThisWeek, today) are this week's already-elapsed
+        // days: left untouched so a mid-week (i.e. every daily) run can't wipe
+        // Monday's signal on Tuesday.
+        const weekStart = mondayOfWeek(now);
+        const weekEnd = nextMondayDate(now); // exclusive
+        const today = now.toISOString().slice(0, 10);
+        for (const [key, { id, date }] of existing) {
+          const outOfWindow = date === "" || date < weekStart || date >= weekEnd;
+          const vanishedFuture = date >= today && !seen.has(key);
+          if (outOfWindow || vanishedFuture) {
             await deleteEventSignal(id);
             deleted += 1;
           }
