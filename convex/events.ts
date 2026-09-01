@@ -14,6 +14,7 @@ import {
   daysUntilNextMonday,
   mondayOfWeek,
   nextMondayDate,
+  DAYPARTS,
 } from "./lib/vocab";
 import {
   listEventSignalIds,
@@ -22,6 +23,13 @@ import {
   deleteEventSignal,
   type BubbleEventSignal,
 } from "./lib/bubble";
+import {
+  HUNTINGTON_CRAWL_DELAY_MS,
+  HUNTINGTON_PLACE_VENUE,
+  listHuntingtonEventUrls,
+  fetchHuntingtonEvent,
+  type HuntingtonEvent,
+} from "./lib/huntingtonPlace";
 
 // Format a Date as ISO8601 UTC without milliseconds (Ticketmaster wants
 // "YYYY-MM-DDTHH:MM:SSZ").
@@ -252,11 +260,205 @@ export const assignEventsToZones = internalAction({
   },
 });
 
-// Step 2e: sync the computed rows into Bubble EventSignal. Upserts by signal_key
-// (update if the key exists, else create). With deleteStale=true, also prunes
-// Bubble rows — but only within a bounded window (see below), so the daily cron
-// can refresh today..next-Monday without wiping days of the current week that
-// have already elapsed.
+// ---------------------------------------------------------------------------
+// Second event source: Huntington Place Detroit (web scrape). See
+// lib/huntingtonPlace.ts for why it's a scrape and not an API call.
+// ---------------------------------------------------------------------------
+
+// Every Huntington Place booking is a multi-day, 3k+ convention-centre event —
+// the "Festival day" tier (see the CLAUDE.md event-magnitude discussion). We do
+// NOT classify per event: the scrape exposes no capacity / attendance / segment,
+// and the category tag doesn't track crowd size (the Detroit Auto Show is tagged
+// "Family Friendly"). The owner retunes the "Festival day" magnitude itself from
+// the admin screen; to promote a specific event later, add a `recid -> class`
+// lookup right here.
+const HUNTINGTON_EVENT_CLASS = "Festival day";
+
+// Calendar dates (YYYY-MM-DD) spanned by [startDate, endDate] that also fall in
+// the half-open sync window [windowStart, windowEnd). Keeps a multi-day event
+// inside today..next-Monday — never an already-elapsed day, never next week —
+// exactly like the Ticketmaster fetch window.
+function daysInWindow(
+  startDate: string,
+  endDate: string,
+  windowStart: string,
+  windowEnd: string,
+): string[] {
+  const out: string[] = [];
+  let cur = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(cur.getTime()) || Number.isNaN(end.getTime())) return out;
+  for (let guard = 0; guard < 90 && cur <= end; guard++) {
+    const iso = cur.toISOString().slice(0, 10);
+    if (iso >= windowStart && iso < windowEnd) out.push(iso);
+    cur = new Date(cur.getTime() + 86_400_000);
+  }
+  return out;
+}
+
+interface HuntingtonGatherResult {
+  events: HuntingtonEvent[]; // fetched + normalized OK (all, before window filter)
+  rows: EventSignalRow[]; // event × in-window day × nearby zone × daypart
+  summary: {
+    discovered: number; // event URLs found in the sitemap
+    fetched: number; // detail pages parsed OK
+    failed: number; // detail pages that errored (transport / HTTP)
+    inWindow: number; // events with ≥1 day inside the sync window
+    signalRows: number;
+    zonesInRange: number;
+  };
+}
+
+// Fetch + normalize the Huntington Place calendar and fan each in-window event
+// out to (nearby zone × daypart) EventSignal rows. Mirrors computeEventSignalRows
+// for the Ticketmaster path, with three source-specific differences:
+//   - one FIXED venue point (every event is at Huntington Place), so proximity
+//     per zone is computed once, not per event;
+//   - no start time -> daypart unknown, so each event-day is fanned out to ALL
+//     FOUR dayparts (a null daypart never matches resolve.ts's `zone|day|daypart`
+//     join, so it would contribute nothing);
+//   - multi-day spans -> one row-set per in-window calendar day.
+async function gatherHuntingtonSignalRows(
+  ctx: ActionCtx,
+  now: Date,
+  days: number,
+): Promise<HuntingtonGatherResult> {
+  const windowStart = now.toISOString().slice(0, 10);
+  const windowEnd = new Date(now.getTime() + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
+  // Drift guard, same as attachClassAndMagnitude: the class we emit must exist
+  // in the owner-editable catalog or its lift silently resolves to 0.
+  const catalog: Doc<"eventMagnitude">[] = await ctx.runQuery(
+    internal.coefficients.listEventMagnitude,
+    {},
+  );
+  const magnitude = catalog.find(
+    (c) => c.eventClass === HUNTINGTON_EVENT_CLASS,
+  )?.magnitude;
+  if (magnitude === undefined) {
+    throw new Error(
+      `Huntington Place class "${HUNTINGTON_EVENT_CLASS}" is not in the eventMagnitude catalog.`,
+    );
+  }
+
+  // Fixed venue -> proximity per zone, computed once (not per event).
+  const zones: ZoneCentroid[] = await ctx.runQuery(api.zones.list, {});
+  const venue = {
+    lat: HUNTINGTON_PLACE_VENUE.lat,
+    lng: HUNTINGTON_PLACE_VENUE.lng,
+  };
+  const zonesInRange = zones
+    .map((z) => {
+      const dist = haversineMiles(venue, {
+        lat: z.centroidLat,
+        lng: z.centroidLng,
+      });
+      return {
+        zone: z.name,
+        proximity: proximityTier(dist),
+        distanceMiles: Math.round(dist * 10) / 10,
+      };
+    })
+    .filter((z) => z.proximity > 0);
+
+  const discovered = await listHuntingtonEventUrls();
+
+  const events: HuntingtonEvent[] = [];
+  const rows: EventSignalRow[] = [];
+  let failed = 0;
+  let inWindow = 0;
+
+  for (const { url, recid } of discovered) {
+    let ev: HuntingtonEvent | null = null;
+    try {
+      ev = await fetchHuntingtonEvent(url, recid);
+    } catch (e) {
+      failed += 1;
+      console.warn(`Huntington event ${recid} fetch failed: ${String(e)}`);
+    }
+    // Polite crawl pace regardless of outcome (robots.txt Crawl-delay: 2).
+    await new Promise((resolve) =>
+      setTimeout(resolve, HUNTINGTON_CRAWL_DELAY_MS),
+    );
+    if (!ev) continue;
+    events.push(ev);
+
+    const dayList = daysInWindow(
+      ev.startDate,
+      ev.endDate,
+      windowStart,
+      windowEnd,
+    );
+    if (dayList.length === 0) continue;
+    inWindow += 1;
+
+    for (const date of dayList) {
+      const day = dayFromLocalDate(date);
+      for (const z of zonesInRange) {
+        for (const daypart of DAYPARTS) {
+          rows.push({
+            signal_key: `hp_${recid}__${z.zone}__${date}__${daypart}`,
+            eventId: `hp_${recid}`,
+            name: ev.name,
+            venueName: HUNTINGTON_PLACE_VENUE.name,
+            eventClass: HUNTINGTON_EVENT_CLASS,
+            magnitude,
+            zone: z.zone,
+            proximity: z.proximity,
+            distanceMiles: z.distanceMiles,
+            time: null,
+            date,
+            day,
+            daypart,
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    events,
+    rows,
+    summary: {
+      discovered: discovered.length,
+      fetched: events.length,
+      failed,
+      inWindow,
+      signalRows: rows.length,
+      zonesInRange: zonesInRange.length,
+    },
+  };
+}
+
+// Debug: run the Huntington Place scrape for the current sync window and return
+// what it WOULD upsert — no writes. Mirrors fetchDetroitEvents / assignEventsToZones.
+export const fetchHuntingtonEventsRaw = internalAction({
+  args: { days: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const now = new Date();
+    const days = args.days ?? daysUntilNextMonday(now);
+    const res = await gatherHuntingtonSignalRows(ctx, now, days);
+    return {
+      window: { start: now.toISOString().slice(0, 10), days },
+      summary: res.summary,
+      events: res.events,
+      sampleRows: res.rows.slice(0, 24),
+    };
+  },
+});
+
+// Step 2e: sync the computed rows into Bubble EventSignal. Pulls from TWO
+// sources in one pass — Ticketmaster (computeEventSignalRows) and a Huntington
+// Place Detroit web scrape (gatherHuntingtonSignalRows) — and upserts the merged
+// set by signal_key (update if the key exists, else create). Huntington keys are
+// `hp_<recid>__<zone>__<date>__<daypart>`; Ticketmaster keys are
+// `<eventId>__<zone>`, so the two never collide. With deleteStale=true, also
+// prunes Bubble rows — but only within a bounded window (see below), so the
+// daily cron can refresh today..next-Monday without wiping days of the current
+// week that have already elapsed. A Huntington scrape failure is non-fatal:
+// the run proceeds Ticketmaster-only and skips Huntington pruning.
 //
 // Chains into the weather sync on completion (see `finally` below) instead of
 // waiting on a separately-scheduled cron — the `finally` runs whether this sync
@@ -270,7 +472,30 @@ export const syncEventSignalsToBubble = internalAction({
       // Fetch window: today through the upcoming Monday (exclusive) — never
       // reaches into next week, and shrinks through the week as days elapse.
       const days = args.days ?? daysUntilNextMonday(now);
-      const { summary, rows } = await computeEventSignalRows(ctx, days);
+      const { summary, rows: tmRows } = await computeEventSignalRows(ctx, days);
+
+      // Second source: scrape Huntington Place Detroit's calendar and merge its
+      // rows into the SAME pass, so one `seen` set drives the windowed
+      // stale-delete below (a separate sync couldn't tell a live Huntington row
+      // from a Ticketmaster orphan). A scrape failure is non-fatal — fall back
+      // to Ticketmaster-only and skip Huntington pruning for this run.
+      let huntington: HuntingtonGatherResult | null = null;
+      try {
+        huntington = await gatherHuntingtonSignalRows(ctx, now, days);
+      } catch (e) {
+        console.error(
+          `Huntington Place scrape failed — continuing Ticketmaster-only: ${String(e)}`,
+        );
+      }
+      // "Clean" = this run has a COMPLETE fresh Huntington picture (sitemap
+      // returned events and every detail page parsed). Only then is it safe to
+      // treat a missing `hp_` key as a genuinely-vanished event.
+      const huntingtonClean =
+        huntington !== null &&
+        huntington.summary.failed === 0 &&
+        huntington.summary.discovered > 0;
+      const rows = huntington ? [...tmRows, ...huntington.rows] : tmRows;
+
       const existing = await listEventSignalIds();
 
       let created = 0;
@@ -321,8 +546,16 @@ export const syncEventSignalsToBubble = internalAction({
         const weekEnd = nextMondayDate(now); // exclusive
         const today = now.toISOString().slice(0, 10);
         for (const [key, { id, date }] of existing) {
+          const isHuntington = key.startsWith("hp_");
           const outOfWindow = date === "" || date < weekStart || date >= weekEnd;
-          const vanishedFuture = date >= today && !seen.has(key);
+          // Only prune a "vanished future" row when this run has a complete
+          // fresh picture from that row's source. If the Huntington scrape
+          // failed / returned nothing, its keys are legitimately missing from
+          // `seen` and must NOT be deleted. Out-of-window pruning (previous
+          // weeks) still runs for both sources.
+          const sourceRefreshed = isHuntington ? huntingtonClean : true;
+          const vanishedFuture =
+            sourceRefreshed && date >= today && !seen.has(key);
           if (outOfWindow || vanishedFuture) {
             await deleteEventSignal(id);
             deleted += 1;
@@ -332,6 +565,7 @@ export const syncEventSignalsToBubble = internalAction({
 
       return {
         computed: summary,
+        huntington: huntington?.summary ?? { skipped: true },
         bubble: { created, updated, deleted, existingBefore: existing.size },
       };
     } finally {

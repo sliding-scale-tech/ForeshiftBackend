@@ -21,6 +21,7 @@ import type * as lib_classify from "../lib/classify.js";
 import type * as lib_formula from "../lib/formula.js";
 import type * as lib_gemini from "../lib/gemini.js";
 import type * as lib_geo from "../lib/geo.js";
+import type * as lib_huntingtonPlace from "../lib/huntingtonPlace.js";
 import type * as lib_orchestrator from "../lib/orchestrator.js";
 import type * as lib_outlook from "../lib/outlook.js";
 import type * as lib_pointInPolygon from "../lib/pointInPolygon.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   "lib/formula": typeof lib_formula;
   "lib/gemini": typeof lib_gemini;
   "lib/geo": typeof lib_geo;
+  "lib/huntingtonPlace": typeof lib_huntingtonPlace;
   "lib/orchestrator": typeof lib_orchestrator;
   "lib/outlook": typeof lib_outlook;
   "lib/pointInPolygon": typeof lib_pointInPolygon;

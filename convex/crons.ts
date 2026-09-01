@@ -27,8 +27,9 @@ import { internal } from "./_generated/api";
 // unchanged: it still recomputes all 819 zone×concept×day rows in place each run.
 const crons = cronJobs();
 
-// Ticketmaster -> classify -> proximity -> EventSignal. Chains into weather sync
-// on completion (events.ts), which chains into resolved-demand sync (weather.ts).
+// Ticketmaster + Huntington Place scrape -> classify -> proximity -> EventSignal.
+// Chains into weather sync on completion (events.ts), which chains into
+// resolved-demand sync (weather.ts).
 crons.cron(
   "daily signal sync",
   "55 3 * * *", // 03:55 UTC every day (same clock time the weekly sync used)
