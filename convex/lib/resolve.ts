@@ -6,7 +6,7 @@
 
 import { computeDemand } from "./formula";
 import { type EventSignalRead, type WeatherSignalRead } from "./bubble";
-import { type Band, type Daypart } from "./vocab";
+import { DAYPARTS, type Band, type Daypart } from "./vocab";
 
 // The owner-editable coefficients as lookup maps (from coefficients.getAll).
 export interface CoefficientBundle {
@@ -61,16 +61,41 @@ export interface ResolvedCell {
   } | null;
 }
 
-/** Index EventSignal rows by `zone|day|daypart` for O(1) per-cell lookup. */
+/** Index EventSignal rows by `zone|day|daypart` for O(1) per-cell lookup.
+ *
+ * De-duplicates within a cell by event identity (name|venue|class). Ticketmaster
+ * routinely lists one real event under several event IDs — price tiers, "Official
+ * Platinum", packages, presale/resale — which become distinct EventSignal rows
+ * with the same name/venue/class landing in the same daypart. resolveCell SUMS a
+ * lift term per row, so without this a single game gets counted two or three
+ * times and event_lift (hence final_score, band, and the ResolvedDemand grid) is
+ * inflated. Two genuinely different events cannot collide on all of
+ * name+venue+class inside one zone|day|daypart, so first row wins — the copies
+ * carry the same magnitude class and proximity, so which is kept doesn't move
+ * the math. (Presentation lists collapse the same way in outlook.ts, plus across
+ * dayparts for timeless events.) */
 export function indexEventsByCell(
   events: EventSignalRead[],
 ): Map<string, EventSignalRead[]> {
   const map = new Map<string, EventSignalRead[]>();
+  const taken = new Set<string>();
   for (const e of events) {
-    const k = `${e.zone}|${e.day}|${e.daypart}`;
-    const list = map.get(k);
-    if (list) list.push(e);
-    else map.set(k, [e]);
+    // A timeless event (all_dayparts) has no single start time, so its lift
+    // applies to every daypart of that zone|day — index it into all four cells.
+    // A normal event goes only in the cell its `daypart` names; a row with no
+    // daypart and all_dayparts=false stays inert (matches Ticketmaster's
+    // long-standing behaviour for events with no time).
+    const dayparts = e.all_dayparts ? DAYPARTS : [e.daypart];
+    for (const dp of dayparts) {
+      if (!dp) continue;
+      const cell = `${e.zone}|${e.day}|${dp}`;
+      const identity = `${cell}|${e.name}|${e.venue_name}|${e.event_class}`;
+      if (taken.has(identity)) continue;
+      taken.add(identity);
+      const list = map.get(cell);
+      if (list) list.push(e);
+      else map.set(cell, [e]);
+    }
   }
   return map;
 }

@@ -21,7 +21,7 @@ import { internal } from "./_generated/api";
 // DAILY, not weekly: each run owns the window [thisMonday, nextMonday). It
 // re-fetches today..next-Monday, upserts those day-slots, and prunes EventSignal
 // /WeatherSignal rows OUTSIDE that window (previous weeks) plus any today-or-later
-// slot a run no longer produces. Rows for days of the current week that have
+// slot aw run no longer produces. Rows for days of the current week that have
 // already elapsed are left untouched — a Tuesday run never wipes Monday's signal.
 // See the deleteStale blocks in events.ts / weather.ts. ResolvedDemand is
 // unchanged: it still recomputes all 819 zone×concept×day rows in place each run.

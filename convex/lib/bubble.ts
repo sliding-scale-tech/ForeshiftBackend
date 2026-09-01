@@ -180,6 +180,10 @@ export interface BubbleEventSignal {
   date: string; // "YYYY-MM-DD"
   day: string | null; // option-set value (Mon..Sun) — omitted if null
   daypart: string | null; // option-set value (morning..late) — omitted if null
+  // true = a timeless event with no single start time (every Huntington Place
+  // event) — resolveCell applies its lift to ALL 4 dayparts of that zone|day
+  // instead of the one `daypart` names. When true, `daypart` is null.
+  all_dayparts: boolean;
 }
 
 // Build the Bubble request body. Null option-set fields (day/daypart) are omitted
@@ -201,6 +205,7 @@ function eventSignalBody(s: BubbleEventSignal): Record<string, unknown> {
     distance_miles: s.distance_miles ?? 0,
     event_time: s.event_time ? s.event_time.slice(0, 5) : "",
     date: toBubbleDate(s.date),
+    all_dayparts: s.all_dayparts,
   };
   if (s.day) body.day = s.day;
   if (s.daypart) body.daypart = s.daypart;
@@ -494,6 +499,7 @@ export interface EventSignalRead {
   event_time: string | null; // "HH:MM" as stored, null if Ticketmaster gave no time
   name: string;
   venue_name: string;
+  all_dayparts: boolean; // true -> lift applies to all 4 dayparts (see BubbleEventSignal)
 }
 
 /** Read EventSignal rows for the given zones/days (empty = all). */
@@ -522,6 +528,9 @@ function toEventSignalRead(r: Record<string, unknown>): EventSignalRead {
     event_time: toStr(r["event_time"]) || null,
     name: toStr(r["name"]),
     venue_name: toStr(r["venue_name"]),
+    // Missing on every row written before this field existed -> false, i.e. the
+    // existing single-daypart behaviour. Only the Huntington scrape sets it true.
+    all_dayparts: Boolean(r["all_dayparts"]),
   };
 }
 

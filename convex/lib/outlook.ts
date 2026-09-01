@@ -187,6 +187,42 @@ function signedPercent(n: number): string {
 const MAX_DRIVERS = 5;
 
 /**
+ * Collapse a day's event list to ONE entry per distinct event. `drivers.events`
+ * is collected per daypart cell, so any event spanning multiple dayparts — every
+ * timeless event (all Huntington Place events are written to all four dayparts),
+ * a long Ticketmaster event, or the same real event listed under several
+ * Ticketmaster IDs at the same daypart — appears more than once. For a "top
+ * drivers" list the event should be named once; keep the occurrence where it
+ * moved demand most (highest lift_score, then highest lift_percent).
+ *
+ * Identity is name|venue|class — within one zone+day that cannot collide across
+ * two genuinely different events. Scoped to ONE day, so the same event on
+ * different days of a weekly response stays as separate (dated) entries.
+ */
+function collapseEventDrivers(
+  events: DayDrivers["events"],
+): DayDrivers["events"] {
+  const best = new Map<string, DayDrivers["events"][number]>();
+  for (const e of events) {
+    const key = `${e.name}|${e.venue}|${e.class}`;
+    const cur = best.get(key);
+    const better =
+      !cur ||
+      e.lift_score > cur.lift_score ||
+      (e.lift_score === cur.lift_score &&
+        (e.lift_percent ?? 0) > (cur.lift_percent ?? 0));
+    if (better) best.set(key, e);
+  }
+  return [...best.values()];
+}
+
+/** Same, for the two-array DayDrivers shape (events collapsed, weather as-is —
+ *  weather is already one reading per daypart). Used for the narration context. */
+function dedupeDayDrivers(d: DayDrivers): DayDrivers {
+  return { events: collapseEventDrivers(d.events), weather: d.weather };
+}
+
+/**
  * Flatten a day's events + weather into the single typed list described above:
  * strongest lift first, capped at MAX_DRIVERS.
  *
@@ -196,7 +232,7 @@ const MAX_DRIVERS = 5;
  * biggest movers in EITHER direction should win the slots instead.
  */
 export function flattenDrivers(drivers: DayDrivers, date: string): DemandDriver[] {
-  const events: DemandDriver[] = drivers.events.map((e) => ({
+  const events: DemandDriver[] = collapseEventDrivers(drivers.events).map((e) => ({
     type: "event",
     daypart: e.daypart,
     name: e.name,
@@ -236,6 +272,35 @@ export function topDrivers<T extends DemandDriver>(drivers: T[]): T[] {
   return [...drivers]
     .sort((a, b) => b.lift_score - a.lift_score)
     .slice(0, MAX_DRIVERS);
+}
+
+/**
+ * Week-wide collapse for the weekly response's single top-5 list. `flattenDrivers`
+ * already dedupes within each day; this additionally collapses the SAME event
+ * across days — a multi-day event (a convention runs Fri–Sun as three dated
+ * rows) would otherwise take several of the five slots. Kept: the day it moved
+ * demand most. Weather rows stay per day+daypart (each is a distinct reading).
+ *
+ * Trade-off: two genuinely different same-named events on different days (e.g. a
+ * Tigers game Tue and another Fri) also collapse to the bigger one here. That's
+ * acceptable for a 5-item week summary; the narration still receives the
+ * per-day (per-day-deduped) breakdown and can mention both.
+ */
+function collapseWeekDrivers(list: WeekDemandDriver[]): WeekDemandDriver[] {
+  const best = new Map<string, WeekDemandDriver>();
+  for (const d of list) {
+    const key =
+      d.type === "event"
+        ? `event|${d.name}|${d.venue}|${d.class}`
+        : `weather|${d.date}|${d.daypart}`;
+    const cur = best.get(key);
+    const better =
+      !cur ||
+      d.lift_score > cur.lift_score ||
+      (d.lift_score === cur.lift_score && d.lift_percent > cur.lift_percent);
+    if (better) best.set(key, d);
+  }
+  return [...best.values()];
 }
 
 // Resolve all 4 dayparts for one zone×concept×day, plus that day's peak and
@@ -390,7 +455,9 @@ export async function computeTodayOutlook(args: {
       date: outlook.date,
       peak: outlook.peak,
       dayparts: outlook.dayparts,
-      drivers: outlook.drivers,
+      // Named once per event — the per-daypart notes below still get the full
+      // per-daypart list (they describe one tile each).
+      drivers: dedupeDayDrivers(outlook.drivers),
     }),
     narrateDaypartEventNotes({
       zone: args.zone,
@@ -446,12 +513,17 @@ export async function computeEventOutlook(args: {
 }): Promise<EventOutlookResult> {
   const outlook = await resolveTodayDay(args);
 
+  // One entry per event — resolveDayOutlook collects per daypart, so a
+  // multi-daypart event (any Huntington Place event, some Ticketmaster ones)
+  // would otherwise be listed several times.
+  const events = collapseEventDrivers(outlook.drivers.events);
+
   const { text, usage } = await narrateEventImpact({
     zone: args.zone,
     concept: args.concept,
     day: outlook.day,
     date: outlook.date,
-    events: outlook.drivers.events,
+    events,
     dayparts: outlook.dayparts,
   });
 
@@ -461,7 +533,7 @@ export async function computeEventOutlook(args: {
     type: "events",
     day: outlook.day,
     date: outlook.date,
-    events: outlook.drivers.events,
+    events,
     narration: text.trim(),
     usage,
   };
@@ -596,7 +668,9 @@ export async function computeWeeklyOutlook(args: {
       day: d.day,
       date: d.date,
       peak: d.peak,
-      drivers: d.drivers,
+      // One entry per event per day (a multi-daypart event is otherwise
+      // repeated); different days stay separate.
+      drivers: dedupeDayDrivers(d.drivers),
     })),
   });
 
@@ -615,13 +689,17 @@ export async function computeWeeklyOutlook(args: {
       })),
     })),
     // One top-5 for the whole week (not per day), each tagged with its day/date.
+    // flattenDrivers dedupes within a day; collapseWeekDrivers then dedupes the
+    // same event across days so one multi-day event can't fill the list.
     drivers: topDrivers(
-      days.flatMap((d) =>
-        flattenDrivers(d.drivers, d.date).map((x) => ({
-          ...x,
-          day: d.day,
-          date: d.date,
-        })),
+      collapseWeekDrivers(
+        days.flatMap((d) =>
+          flattenDrivers(d.drivers, d.date).map((x) => ({
+            ...x,
+            day: d.day,
+            date: d.date,
+          })),
+        ),
       ),
     ),
     weekPeak: { day: peakDay.day, date: peakDay.date, ...peakDay.peak },

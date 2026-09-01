@@ -14,7 +14,6 @@ import {
   daysUntilNextMonday,
   mondayOfWeek,
   nextMondayDate,
-  DAYPARTS,
 } from "./lib/vocab";
 import {
   listEventSignalIds,
@@ -179,7 +178,10 @@ export interface EventSignalRow {
   time: string | null; // localTime "HH:MM:SS", if Ticketmaster provided one
   date: string; // localDate "YYYY-MM-DD"
   day: string | null; // Mon..Sun
-  daypart: string | null; // morning|midday|dinner|late
+  daypart: string | null; // morning|midday|dinner|late (null when all_dayparts)
+  // true -> timeless event, lift applies to all 4 dayparts (see resolve.ts).
+  // Only the Huntington Place scrape sets this; Ticketmaster rows are always false.
+  allDayparts: boolean;
 }
 
 // Core of step 2d: fetch Detroit events, classify + attach magnitude, then assign
@@ -234,6 +236,7 @@ async function computeEventSignalRows(
         date: ev.localDate,
         day: dayFromLocalDate(ev.localDate),
         daypart: daypartFromLocalTime(ev.localTime),
+        allDayparts: false,
       });
     }
     if (matched === 0) droppedOutOfRange += 1;
@@ -298,7 +301,7 @@ function daysInWindow(
 
 interface HuntingtonGatherResult {
   events: HuntingtonEvent[]; // fetched + normalized OK (all, before window filter)
-  rows: EventSignalRow[]; // event × in-window day × nearby zone × daypart
+  rows: EventSignalRow[]; // one per event × in-window day × nearby zone (allDayparts)
   summary: {
     discovered: number; // event URLs found in the sitemap
     fetched: number; // detail pages parsed OK
@@ -309,15 +312,15 @@ interface HuntingtonGatherResult {
   };
 }
 
-// Fetch + normalize the Huntington Place calendar and fan each in-window event
-// out to (nearby zone × daypart) EventSignal rows. Mirrors computeEventSignalRows
+// Fetch + normalize the Huntington Place calendar and turn each in-window event
+// into one EventSignal row per nearby zone per day. Mirrors computeEventSignalRows
 // for the Ticketmaster path, with three source-specific differences:
 //   - one FIXED venue point (every event is at Huntington Place), so proximity
 //     per zone is computed once, not per event;
-//   - no start time -> daypart unknown, so each event-day is fanned out to ALL
-//     FOUR dayparts (a null daypart never matches resolve.ts's `zone|day|daypart`
-//     join, so it would contribute nothing);
-//   - multi-day spans -> one row-set per in-window calendar day.
+//   - no start time -> the row carries daypart=null and allDayparts=true, so
+//     resolveCell applies its lift to all 4 dayparts (a plain null-daypart row
+//     never matches resolve.ts's `zone|day|daypart` join and would do nothing);
+//   - multi-day spans -> one row per in-window calendar day.
 async function gatherHuntingtonSignalRows(
   ctx: ActionCtx,
   now: Date,
@@ -397,23 +400,24 @@ async function gatherHuntingtonSignalRows(
     for (const date of dayList) {
       const day = dayFromLocalDate(date);
       for (const z of zonesInRange) {
-        for (const daypart of DAYPARTS) {
-          rows.push({
-            signal_key: `hp_${recid}__${z.zone}__${date}__${daypart}`,
-            eventId: `hp_${recid}`,
-            name: ev.name,
-            venueName: HUNTINGTON_PLACE_VENUE.name,
-            eventClass: HUNTINGTON_EVENT_CLASS,
-            magnitude,
-            zone: z.zone,
-            proximity: z.proximity,
-            distanceMiles: z.distanceMiles,
-            time: null,
-            date,
-            day,
-            daypart,
-          });
-        }
+        // ONE row per event × zone × day. No start time -> allDayparts=true,
+        // and resolveCell/indexEventsByCell applies the lift to all 4 dayparts.
+        rows.push({
+          signal_key: `hp_${recid}__${z.zone}__${date}`,
+          eventId: `hp_${recid}`,
+          name: ev.name,
+          venueName: HUNTINGTON_PLACE_VENUE.name,
+          eventClass: HUNTINGTON_EVENT_CLASS,
+          magnitude,
+          zone: z.zone,
+          proximity: z.proximity,
+          distanceMiles: z.distanceMiles,
+          time: null,
+          date,
+          day,
+          daypart: null,
+          allDayparts: true,
+        });
       }
     }
   }
@@ -453,8 +457,9 @@ export const fetchHuntingtonEventsRaw = internalAction({
 // sources in one pass — Ticketmaster (computeEventSignalRows) and a Huntington
 // Place Detroit web scrape (gatherHuntingtonSignalRows) — and upserts the merged
 // set by signal_key (update if the key exists, else create). Huntington keys are
-// `hp_<recid>__<zone>__<date>__<daypart>`; Ticketmaster keys are
-// `<eventId>__<zone>`, so the two never collide. With deleteStale=true, also
+// `hp_<recid>__<zone>__<date>` (one row per event/zone/day, allDayparts=true);
+// Ticketmaster keys are `<eventId>__<zone>`, so the two never collide. With
+// deleteStale=true, also
 // prunes Bubble rows — but only within a bounded window (see below), so the
 // daily cron can refresh today..next-Monday without wiping days of the current
 // week that have already elapsed. A Huntington scrape failure is non-fatal:
@@ -517,6 +522,7 @@ export const syncEventSignalsToBubble = internalAction({
           date: row.date,
           day: row.day,
           daypart: row.daypart,
+          all_dayparts: row.allDayparts,
         };
         seen.add(row.signal_key);
         const found = existing.get(row.signal_key);

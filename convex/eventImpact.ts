@@ -40,8 +40,9 @@ export interface EventImpactDaypart {
   // 150). Expressing that lift as a percentage of base is this API's own
   // presentation choice — change it here if the owner defines it differently.
   //
-  // 0 on the three dayparts the event doesn't fall in, and on a closed daypart
-  // whose base_score is 0 (nothing to take a percentage of).
+  // 0 on the dayparts the event doesn't fall in (all but one, for a normal
+  // timed event; none, for an all_dayparts event, which lifts all four), and on
+  // a closed daypart whose base_score is 0 (nothing to take a percentage of).
   percent: number;
 }
 
@@ -131,23 +132,35 @@ export const getEventImpact = internalAction({
       throw new Error(`No base demand data for ${zone} / ${concept} / ${day}.`);
     }
 
-    const eventDaypart = event.daypart as Daypart;
     const baseScoreOf = (dp: Daypart) =>
       record.dayparts.find((d) => d.daypart === dp)?.base_score ?? 0;
 
+    // An all_dayparts event (every Huntington Place event — no single start
+    // time) lifts all 4 dayparts. The response still carries ONE headline
+    // daypart/band: the busiest one, i.e. where base_score + lift is highest —
+    // and since lift is the same for every daypart, that's just the highest
+    // base_score. A normal event's headline daypart is the one it falls in.
+    const peakDaypart = [...DAYPARTS].sort(
+      (a, b) => baseScoreOf(b) - baseScoreOf(a),
+    )[0];
+    const headlineDaypart: Daypart = event.all_dayparts
+      ? peakDaypart
+      : (event.daypart as Daypart);
+
     const dayparts: EventImpactDaypart[] = DAYPARTS.map((dp) => {
       const base_score = baseScoreOf(dp);
-      const applies = dp === eventDaypart && base_score > 0;
+      const applies =
+        base_score > 0 && (event.all_dayparts || dp === headlineDaypart);
       return {
         daypart: dp,
         percent: applies ? round1((lift / base_score) * 100) : 0,
       };
     });
 
-    // Band of the event's own daypart once its lift lands — same 150 cap and
-    // the same thresholds every other score in the system is banded on.
+    // Band of the headline daypart once this event's lift lands — same 150 cap
+    // and the same thresholds every other score in the system is banded on.
     const impact_band = scoreToBand(
-      Math.min(baseScoreOf(eventDaypart) + lift, SCORE_CAP),
+      Math.min(baseScoreOf(headlineDaypart) + lift, SCORE_CAP),
     );
 
     return {
@@ -160,7 +173,7 @@ export const getEventImpact = internalAction({
         class: event.event_class,
         day,
         date: event.date,
-        daypart: eventDaypart,
+        daypart: headlineDaypart,
         time: event.event_time,
         proximity: event.proximity,
         distance_miles: event.distance_miles,
